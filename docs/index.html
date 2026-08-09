@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FIMLM · Ingresando al registro</title>
+<style>
+  :root {
+    --azul: #1b4f8c;
+    --azul-oscuro: #123a68;
+    --gris-borde: #d7dde3;
+    --gris-fondo: #f4f6f8;
+    --texto: #1f2937;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--gris-fondo);
+    color: var(--texto);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--gris-borde);
+    border-radius: 12px;
+    padding: 40px 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  h1 {
+    font-size: 1.3rem;
+    color: var(--azul-oscuro);
+    margin: 0 0 8px;
+  }
+  p.mensaje {
+    color: #4b5563;
+    min-height: 44px;
+    margin: 4px 0 20px;
+  }
+  .spinner {
+    width: 46px;
+    height: 46px;
+    border: 5px solid var(--gris-borde);
+    border-top-color: var(--azul);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: girar 0.9s linear infinite;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .barra {
+    height: 6px;
+    background: var(--gris-borde);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .barra > div {
+    height: 100%;
+    width: 30%;
+    background: var(--azul);
+    border-radius: 4px;
+    animation: mover 1.4s ease-in-out infinite;
+  }
+  @keyframes mover {
+    0% { margin-left: -30%; }
+    100% { margin-left: 100%; }
+  }
+  a.directo {
+    display: inline-block;
+    margin-top: 4px;
+    color: var(--azul);
+    font-size: 0.92rem;
+    text-decoration: none;
+  }
+  a.directo:hover { text-decoration: underline; }
+  .footer {
+    margin-top: 24px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h1>Preparando el registro FIMLM</h1>
+    <p class="mensaje" id="mensaje">Conectando...</p>
+    <div class="barra"><div></div></div>
+    <a class="directo" id="enlaceDirecto" href="#">¿Prefieres entrar directo? Haz clic aquí</a>
+    <div class="footer">Fundación Internacional María Luisa de Moreno</div>
+  </div>
+
+<script>
+  var DESTINO = "https://fimlm-preinscripcion.onrender.com/preinscripcion";
+  document.getElementById("enlaceDirecto").href = DESTINO;
+
+  var mensajeEl = document.getElementById("mensaje");
+  var intentos = 0;
+  var mensajes = [
+    "Conectando...",
+    "Despertando la aplicación...",
+    "La primera visita puede tardar hasta un minuto...",
+    "Casi listo, gracias por tu paciencia...",
+    "Esto está tardando más de lo normal. Puedes esperar o entrar directo abajo."
+  ];
+
+  function actualizarMensaje() {
+    var idx = Math.min(intentos, mensajes.length - 1);
+    mensajeEl.textContent = mensajes[idx];
+  }
+
+  function intentar() {
+    intentos++;
+    actualizarMensaje();
+
+    var controlador = new AbortController();
+    var timeout = setTimeout(function () { controlador.abort(); }, 25000);
+
+    fetch(DESTINO, { mode: "no-cors", cache: "no-store", signal: controlador.signal })
+      .then(function () {
+        clearTimeout(timeout);
+        mensajeEl.textContent = "¡Listo! Entrando...";
+        window.location.href = DESTINO;
+      })
+      .catch(function () {
+        clearTimeout(timeout);
+        setTimeout(intentar, 2000);
+      });
+  }
+
+  intentar();
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
-  "name": "fimlm-preinscripcion",
+  "name": "registro-beneficiarios",
   "version": "1.0.0",
-  "description": "Preinscripcion y administracion de beneficiarios FIMLM (Jornadas de Apoyo)",
+  "description": "Preinscripcion y administracion de beneficiarios (Jornadas de Apoyo)",
   "private": true,
   "main": "src/server.js",
   "scripts": {

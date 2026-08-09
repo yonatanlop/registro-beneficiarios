@@ -43,7 +43,7 @@ async function seedAdminIfEmpty() {
     await client.query(
       `INSERT INTO usuarios_admin (usuario, password_hash, nombre_completo, activo)
        VALUES ($1, $2, $3, 'S')`,
-      [adminUser, hash, 'Administrador FIMLM']
+      [adminUser, hash, 'Administrador']
     );
     console.log(`[usuarios] Usuario administrador inicial creado: ${adminUser}`);
     console.log('[usuarios] Cambia la clave por defecto lo antes posible.');

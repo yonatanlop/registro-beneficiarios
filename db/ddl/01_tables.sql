@@ -1,5 +1,5 @@
 -- =====================================================================
--- FIMLM - Registro de Beneficiarios (Jornadas de Apoyo)
+-- Registro de Beneficiarios (Jornadas de Apoyo)
 -- Esquema de base de datos Oracle
 -- =====================================================================
 
@@ -7,7 +7,7 @@
 -- Tabla: beneficiarios
 -- Un registro por persona (clave natural: documento_identidad).
 -- Reproduce las columnas 14 a 21 de la "Planilla de Registro de
--- Beneficiarios" (FIMLM), mas los datos de la jornada/evento (columnas
+-- Beneficiarios", mas los datos de la jornada/evento (columnas
 -- 3 a 12) en la que fue registrada o actualizada por ultima vez.
 -- No se guarda la columna 22 (Firma o huella) por decision del negocio.
 -- ---------------------------------------------------------------------

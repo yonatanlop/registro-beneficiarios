@@ -40,7 +40,7 @@ router.get('/export', async (req, res, next) => {
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     );
-    const filename = soloRegistrados ? 'beneficiarios_fimlm_registrados.xlsx' : 'beneficiarios_fimlm_todos.xlsx';
+    const filename = soloRegistrados ? 'beneficiarios_registrados.xlsx' : 'beneficiarios_todos.xlsx';
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await wb.xlsx.write(res);
     res.end();

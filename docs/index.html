@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FIMLM · Ingresando al registro</title>
+<title>Registro de Beneficiarios · Ingresando</title>
 <style>
   :root {
     --azul: #1b4f8c;
@@ -91,14 +91,15 @@
 <body>
   <div class="card">
     <div class="spinner"></div>
-    <h1>Preparando el registro FIMLM</h1>
+    <h1>Preparando el registro de beneficiarios</h1>
     <p class="mensaje" id="mensaje">Conectando...</p>
     <div class="barra"><div></div></div>
     <a class="directo" id="enlaceDirecto" href="#">¿Prefieres entrar directo? Haz clic aquí</a>
-    <div class="footer">Fundación Internacional María Luisa de Moreno</div>
+    <div class="footer">Registro de Beneficiarios · Jornadas de Apoyo</div>
   </div>
 
 <script>
+  // TODO: actualizar cuando se renombre el servicio de Render (ver README).
   var DESTINO = "https://fimlm-preinscripcion.onrender.com/preinscripcion";
   document.getElementById("enlaceDirecto").href = DESTINO;
 

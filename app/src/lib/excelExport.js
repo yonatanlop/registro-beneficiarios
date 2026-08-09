@@ -11,7 +11,7 @@ function cellValue(field, row) {
 
 async function buildBeneficiariosWorkbook(rows) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'FIMLM';
+  wb.creator = 'Registro de Beneficiarios';
   wb.created = new Date();
 
   const sheet = wb.addWorksheet('Beneficiarios', {
@@ -20,7 +20,7 @@ async function buildBeneficiariosWorkbook(rows) {
 
   sheet.mergeCells(1, 1, 1, FIELDS.length + 1);
   const title = sheet.getCell(1, 1);
-  title.value = 'PLANILLA DE REGISTRO DE BENEFICIARIOS - FIMLM';
+  title.value = 'PLANILLA DE REGISTRO DE BENEFICIARIOS';
   title.font = { bold: true, size: 14 };
   title.alignment = { horizontal: 'center' };
 

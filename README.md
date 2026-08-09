@@ -1,15 +1,16 @@
-# FIMLM · Registro de Beneficiarios (Jornadas de Apoyo)
+# Registro de Beneficiarios (Jornadas de Apoyo)
 
 ## En producción
 
-- **App:** https://fimlm-preinscripcion.onrender.com/preinscripcion (Render, free tier)
+- **App:** (pendiente de actualizar aquí tras renombrar el servicio de Render — ver sección "Despliegue")
 - **Base de datos:** Neon (Postgres, free tier)
-- **Punto de entrada recomendado:** https://yonatanlop.github.io/fimlm-preinscripcion/
+- **Punto de entrada recomendado:** https://yonatanlop.github.io/registro-beneficiarios/
   — pantalla de espera que aguanta el "cold start" de Render (el free tier
   duerme el servicio tras 15 min sin visitas y tarda ~30-60s en despertar)
   y redirige sola a `/preinscripcion` en cuanto la app responde. Compártela
   a los usuarios en vez del link directo a Render.
-- **Importar los datos del PDF a producción:** `./scripts/importar_datos.sh`
+- **Importar los datos del PDF a producción:**
+  `./scripts/importar_datos.sh https://tu-app.onrender.com`
   (pide usuario/clave admin de forma interactiva, sube
   `data/transcripcion_junio_2025.xlsx` vía el panel admin).
 
@@ -18,10 +19,9 @@ Mini aplicación web con 3 páginas:
 1. **Preinscripción** (`/preinscripcion`, pública): busca a una persona por
    documento de identidad. Si ya existe, precarga sus datos para
    actualizarlos; si no existe, permite registrarla. Reproduce todas las
-   columnas de la "Planilla de Registro de Beneficiarios" de FIMLM, excepto
+   columnas de la planilla de registro de beneficiarios en papel, excepto
    la firma/huella.
-2. **Ingreso administrativo** (`/login`): acceso con usuario y contraseña
-   para el equipo de FIMLM.
+2. **Ingreso administrativo** (`/login`): acceso con usuario y contraseña.
 3. **Panel administrativo** (`/admin`): listado y búsqueda de todos los
    beneficiarios registrados, edición, exportación a Excel (con el mismo
    formato de columnas de la planilla) e importación masiva desde Excel.
@@ -60,13 +60,6 @@ Desde `/admin/configuracion` se define:
 
 ## Arquitectura
 
-> **Nota:** el plan original era desplegar sobre Oracle Cloud + Oracle
-> Database (ver `db/ddl/`, `db/init/`), pero la capacidad gratuita de
-> instancias ARM (Ampere A1) de Oracle no estuvo disponible a tiempo. La
-> app se migró a **Postgres** (`db/postgres/`) para desplegar gratis y sin
-> depender de disponibilidad de nadie, en **Neon + Render**. El código de
-> Oracle se dejó documentado por si se retoma esa ruta más adelante.
-
 - **Backend:** Node.js + Express + EJS (sin frameworks de frontend, para
   mantenerlo simple de operar y desplegar).
 - **Base de datos:** Postgres, vía el driver oficial `pg`. En producción,
@@ -76,29 +69,41 @@ Desde `/admin/configuracion` se define:
   depender de tener ya una base disponible.
 - **Excel:** `exceljs`, tanto para exportar el listado como para leer los
   archivos de importación.
+- **Pantalla de espera:** página estática en `docs/`, publicada gratis con
+  GitHub Pages (no se duerme nunca, a diferencia del free tier de Render).
+
+> Nota histórica: el plan original era desplegar sobre Oracle Cloud +
+> Oracle Database (`db/ddl/`, `db/init/`), pero la capacidad gratuita de
+> instancias ARM de Oracle no estuvo disponible a tiempo. La app se migró
+> a Postgres para desplegar gratis sin depender de disponibilidad de
+> capacidad. El código de Oracle se dejó como referencia por si se retoma
+> esa ruta más adelante.
 
 ```
 app/                    Aplicación Node.js
   src/
     server.js           Punto de entrada
-    db.js                Pool de conexión a Oracle
-    lib/                 Reglas de negocio (campos, beneficiarios, usuarios, excel)
+    db.js                Pool de conexión a Postgres
+    lib/                 Reglas de negocio (campos, beneficiarios, usuarios, cupo, excel)
     routes/               public.js (preinscripción), auth.js (login), admin.js
     views/                Plantillas EJS
     public/               CSS
   Dockerfile
 db/
-  ddl/01_tables.sql      DDL para producción (tablas beneficiarios y usuarios_admin)
-  ddl/02_ajustes.sql     DDL para producción (cupo/externos/registrado, tabla configuracion)
-  init/01_init.sql       Sólo para el contenedor local de Oracle Free (ejecuta 01 y 02 en orden)
+  postgres/001_init.sql   DDL activo (Postgres / Neon)
+  ddl/, init/             DDL de referencia para Oracle (no usado actualmente)
 data/
-  transcripcion_junio_2025.xlsx   Datos de la planilla en PDF, transcritos para revisión
+  transcripcion_junio_2025.xlsx   Datos de la planilla en PDF, transcritos para revisión (no versionado, contiene datos personales)
   build_transcripcion.py          Script que generó ese Excel (referencia)
+docs/
+  index.html             Pantalla de espera (GitHub Pages)
+scripts/
+  importar_datos.sh      Sube el Excel transcrito a la app ya desplegada
 docker-compose.yml
 .env.example
 ```
 
-## Cómo probarlo localmente (con Oracle Free en un contenedor)
+## Cómo probarlo localmente
 
 Requiere Docker Desktop.
 
@@ -107,10 +112,8 @@ cp .env.example .env      # y cambia las claves si quieres
 docker compose up --build
 ```
 
-La primera vez, Oracle Free tarda unos minutos en inicializar la base de
-datos y ejecutar `db/init/01_init.sql` (que crea las tablas). Cuando el
-contenedor `db` quede "healthy", la app queda disponible en
-<http://localhost:3000>.
+La app queda disponible en <http://localhost:3000> en cuanto el contenedor
+`db` (Postgres) quede "healthy" — no toma más de unos segundos.
 
 Usuario administrador inicial (se crea automáticamente si la tabla
 `usuarios_admin` está vacía):
@@ -121,53 +124,46 @@ Usuario administrador inicial (se crea automáticamente si la tabla
 **Cambia esta contraseña por defecto antes de usar la aplicación con datos
 reales.**
 
-## Cómo desplegar contra un Oracle real (producción)
+## Cómo desplegar (Neon + Render, gratis)
 
-1. Pide al DBA que ejecute `db/ddl/01_tables.sql` y luego `db/ddl/02_ajustes.sql`
-   (en ese orden) en el esquema/usuario que usará la aplicación (o
-   ejecútalos tú mismo conectado como ese usuario).
-2. Construye y publica la imagen de la app:
-   ```bash
-   docker build -t fimlm-app ./app
-   ```
-3. Ejecuta el contenedor apuntando a la base de datos real, por ejemplo:
-   ```bash
-   docker run -d -p 3000:3000 \
-     -e DB_USER=fimlm \
-     -e DB_PASSWORD=*** \
-     -e DB_CONNECT_STRING=mi-servidor-oracle:1521/MIPDB \
-     -e SESSION_SECRET=*** \
-     -e ADMIN_USER=admin \
-     -e ADMIN_PASSWORD=*** \
-     fimlm-app
-   ```
-   `DB_CONNECT_STRING` acepta cualquier "easy connect string" de Oracle
-   (`host:puerto/servicio`), incluida una base Oracle Autonomous o un RAC.
-4. Si vas a correr más de una réplica del contenedor de la app, ten en
-   cuenta que las sesiones de login (`express-session`) se guardan en
-   memoria de cada instancia; con una sola réplica no hay problema. Para
-   múltiples réplicas, habría que mover las sesiones a un almacén
-   compartido (por ejemplo, una tabla en la misma base Oracle) antes de
-   escalar horizontalmente.
+1. **Neon:** crea una cuenta en neon.tech, crea un proyecto, copia el
+   "Connection string" (`postgres://...`), y ejecuta el contenido de
+   `db/postgres/001_init.sql` en su SQL Editor (crea las tablas).
+2. **Render:** crea una cuenta en render.com, conecta este repositorio,
+   crea un **Web Service** con:
+   - Root Directory: `app`
+   - Environment: Docker
+   - Instance Type: Free
+   - Variables de entorno: `DATABASE_URL` (el connection string de Neon),
+     `SESSION_SECRET`, `ADMIN_USER`, `ADMIN_PASSWORD`.
+3. Render construye la imagen y publica una URL `https://xxx.onrender.com`.
+4. Actualiza `DESTINO` en `docs/index.html` con esa URL y vuelve a publicar
+   (commit + push) para que la pantalla de espera apunte al lugar correcto.
+
+El free tier de Render duerme el servicio tras 15 min sin tráfico; el
+primer request tras eso tarda ~30-60s (por eso existe la pantalla de espera
+en `docs/`).
 
 ## Variables de entorno de la app
 
-| Variable            | Descripción                                              |
-|---------------------|-----------------------------------------------------------|
-| `DB_USER`           | Usuario de la base de datos Oracle                        |
-| `DB_PASSWORD`       | Contraseña de ese usuario                                  |
-| `DB_CONNECT_STRING` | `host:puerto/servicio` de Oracle                           |
-| `SESSION_SECRET`    | Secreto para firmar la cookie de sesión                    |
-| `ADMIN_USER`        | Usuario administrador que se crea la primera vez           |
-| `ADMIN_PASSWORD`    | Contraseña del usuario administrador inicial                |
-| `PORT`               | Puerto HTTP de la app (por defecto 3000)                    |
+| Variable          | Descripción                                                        |
+|--------------------|---------------------------------------------------------------------|
+| `DATABASE_URL`     | Connection string de Postgres (`postgres://usuario:clave@host/bd`) |
+| `PGSSL`             | `false` para desactivar SSL (solo en local); en producción se deja SSL activo |
+| `SESSION_SECRET`   | Secreto para firmar la cookie de sesión                             |
+| `ADMIN_USER`       | Usuario administrador que se crea la primera vez                    |
+| `ADMIN_PASSWORD`   | Contraseña del usuario administrador inicial                        |
+| `PORT`              | Puerto HTTP de la app (Render lo define solo; por defecto 3000 en local) |
 
 ## Carga inicial de los datos del PDF (junio 2025)
 
-El archivo `Planillas Jornada de apoyo junio 2025.pdf` es un escaneo
-manuscrito de 11 páginas (~97 beneficiarios) de una jornada de "Entrega de
-Mercados Básicos" en Tunja, Boyacá. Sus datos fueron transcritos con
-asistencia de IA a `data/transcripcion_junio_2025.xlsx`.
+El PDF fuente es un escaneo manuscrito de 11 páginas (~97 beneficiarios) de
+una jornada de "Entrega de Mercados Básicos" en Tunja, Boyacá. Sus datos
+fueron transcritos con asistencia de IA a
+`data/transcripcion_junio_2025.xlsx`. **Ese PDF y ese Excel contienen datos
+personales reales (nombres, cédulas, teléfonos) y por eso no están en este
+repositorio** (están excluidos vía `.gitignore`); viven solo en el equipo
+donde se generaron.
 
 **Este archivo es un borrador y debe ser revisado por una persona antes de
 importarlo**: la letra manuscrita puede generar errores de lectura,
@@ -175,24 +171,26 @@ especialmente en números de documento y teléfono. La columna
 "Revisar (IA)" señala las filas donde hubo mayor incertidumbre al leer el
 original; conviene también revisar el resto comparando contra el PDF.
 
-Una vez revisado y corregido:
+Una vez revisado y corregido, dos formas de cargarlo:
 
-1. Inicia sesión en el panel administrativo.
-2. Ve a **Importar datos (Excel)** (`/admin/importar`).
-3. Sube el archivo `.xlsx` revisado. Cada fila crea un beneficiario nuevo si
-   el documento de identidad no existe, o actualiza sus datos si ya existe
-   (mismo criterio que usa el formulario de preinscripción).
+- **Desde el panel admin:** inicia sesión → **Importar datos (Excel)**
+  (`/admin/importar`) → sube el archivo.
+- **Desde la terminal:** `./scripts/importar_datos.sh https://tu-app.onrender.com`
 
-El campo "3. Fecha de diligenciamiento" quedó en blanco en el documento
-original (no fue diligenciado por quienes llenaron la planilla), por lo que
-también llegó vacío en la transcripción.
+Cada fila crea un beneficiario nuevo si el documento de identidad no
+existe, o actualiza sus datos si ya existe (mismo criterio que usa el
+formulario de preinscripción). La importación **no** marca a nadie como
+"registrado" (ver sección de cupo más arriba).
+
+El campo "Fecha de diligenciamiento" quedó en blanco en el documento
+original, por lo que también llegó vacío en la transcripción.
 
 ## Cómo funciona la búsqueda/actualización (preinscripción)
 
 - El formulario de preinscripción primero pide el documento de identidad.
 - Si existe un beneficiario con ese documento, se precargan todos sus datos
-  para editarlos y guardarlos (`UPDATE`).
+  para editarlos y guardarlos (`UPDATE`), y queda marcado como "registrado".
 - Si no existe, el formulario queda vacío (con el documento ya escrito) para
-  registrarlo por primera vez (`INSERT`).
+  registrarlo por primera vez (`INSERT`), también marcado como "registrado".
 - El documento de identidad es la clave única de cada beneficiario: no se
   pueden crear dos registros con el mismo documento.

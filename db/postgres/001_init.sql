@@ -1,5 +1,5 @@
 -- =====================================================================
--- FIMLM - Registro de Beneficiarios (Jornadas de Apoyo)
+-- Registro de Beneficiarios (Jornadas de Apoyo)
 -- Esquema Postgres (Neon / cualquier Postgres 13+)
 -- Equivalente a db/ddl/01_tables.sql + 02_ajustes.sql (version Oracle),
 -- adaptado para el despliegue gratuito en Neon + Render.

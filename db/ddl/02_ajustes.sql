@@ -1,5 +1,5 @@
 -- =====================================================================
--- FIMLM - Ajustes: cupo de registros, % de externos, marca de registrado
+-- Ajustes: cupo de registros, % de externos, marca de registrado
 -- =====================================================================
 
 -- Columna 14b (nueva): indica si el beneficiario se marco como externo

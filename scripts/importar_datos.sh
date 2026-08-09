@@ -5,14 +5,17 @@
 # lado ni pasa por el historial de este script.
 #
 # Uso:
-#   ./scripts/importar_datos.sh [URL_DE_LA_APP]
+#   ./scripts/importar_datos.sh https://tu-app.onrender.com
 #
-# Si no pasas URL, usa https://fimlm-preinscripcion.onrender.com por defecto.
 # Debe correrse desde la raíz del proyecto (donde está la carpeta data/).
 
 set -e
 
-URL="${1:-https://fimlm-preinscripcion.onrender.com}"
+if [ -z "$1" ]; then
+  echo "Uso: ./scripts/importar_datos.sh https://tu-app.onrender.com"
+  exit 1
+fi
+URL="$1"
 ARCHIVO="data/transcripcion_junio_2025.xlsx"
 
 if [ ! -f "$ARCHIVO" ]; then

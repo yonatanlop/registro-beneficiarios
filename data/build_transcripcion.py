@@ -6,7 +6,7 @@ Genera data/transcripcion_junio_2025.xlsx a partir de la lectura manual
 
 Este archivo es un BORRADOR PARA REVISION HUMANA: la letra manuscrita del
 PDF puede generar errores de lectura, sobre todo en numeros de documento y
-telefono. Antes de importarlo en la aplicacion, alguien de FIMLM debe
+telefono. Antes de importarlo en la aplicacion, alguien del equipo debe
 revisar cada fila (especialmente las marcadas en la columna
 "Revisar (IA)") comparando contra el PDF original.
 """

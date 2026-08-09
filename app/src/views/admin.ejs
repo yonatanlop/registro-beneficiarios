@@ -1,0 +1,91 @@
+<%- include('partials/head', { titulo: 'Panel administrativo - FIMLM' }) %>
+<%- include('partials/nav') %>
+
+<%
+const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100);
+const cupoLleno = cupo.registrados >= config.maxRegistros;
+const cupoExternosLleno = cupo.externos >= cupoExternos;
+%>
+
+<main>
+  <div class="card">
+    <h1>Beneficiarios registrados</h1>
+
+    <div class="alerta <%= cupoLleno ? 'error' : 'info' %>">
+      <strong><%= cupo.registrados %> / <%= config.maxRegistros %></strong> registrados
+      <% if (cupoLleno) { %>— cupo lleno, no se aceptan nuevos registros (sí se puede editar).<% } %>
+      &nbsp;·&nbsp;
+      <strong><%= cupo.externos %> / <%= cupoExternos %></strong> externos (<%= config.pctExternos %>%)
+      <% if (cupoExternosLleno) { %>— cupo de externos lleno.<% } %>
+      &nbsp;·&nbsp;<a href="/admin/configuracion">Ajustar cupo</a>
+    </div>
+
+    <form class="busqueda" action="/admin" method="get">
+      <div class="campo">
+        <label for="q">Buscar por nombre o documento</label>
+        <input type="text" id="q" name="q" value="<%= q %>" />
+      </div>
+      <button type="submit">Buscar</button>
+      <% if (q) { %><a class="btn secundario" href="/admin">Quitar filtro</a><% } %>
+    </form>
+
+    <div class="acciones" style="margin-top:16px">
+      <a class="btn" href="/admin/export">Exportar todos a Excel</a>
+      <a class="btn secundario" href="/admin/export?solo_registrados=1">Exportar solo registrados</a>
+      <a class="btn secundario" href="/admin/importar">Importar datos (Excel)</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <p><strong><%= total %></strong> beneficiario(s) encontrado(s).</p>
+    <div class="tabla-wrap">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Documento</th>
+            <th>Nombres y apellidos</th>
+            <th>Sexo</th>
+            <th>Edad</th>
+            <th>Municipio</th>
+            <th>Teléfono</th>
+            <th>Registrado</th>
+            <th>Externo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% rows.forEach(function(r) { %>
+            <tr>
+              <td><%= r.documento_identidad %></td>
+              <td><%= r.nombres_apellidos %></td>
+              <td><%= r.sexo || '' %></td>
+              <td><%= r.edad || '' %></td>
+              <td><%= r.municipio || '' %></td>
+              <td><%= r.telefono || '' %></td>
+              <td><%= r.registrado === 'S' ? 'Sí' : 'No' %></td>
+              <td><%= r.es_externo === 'S' ? 'Sí' : 'No' %></td>
+              <td><a class="btn secundario" href="/admin/beneficiarios/<%= r.id %>/editar">Editar</a></td>
+            </tr>
+          <% }); %>
+          <% if (rows.length === 0) { %>
+            <tr><td colspan="9">No hay resultados.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="paginacion">
+      <% if (page > 1) { %>
+        <a class="btn secundario" href="/admin?page=<%= page - 1 %>&q=<%= encodeURIComponent(q) %>">« Anterior</a>
+      <% } %>
+      <span>Página <%= page %> de <%= totalPages %></span>
+      <% if (page < totalPages) { %>
+        <a class="btn secundario" href="/admin?page=<%= page + 1 %>&q=<%= encodeURIComponent(q) %>">Siguiente »</a>
+      <% } %>
+    </div>
+  </div>
+</main>
+
+<footer class="pie">Fundación Internacional María Luisa de Moreno · Registro de Beneficiarios</footer>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<header class="top">
+  <a class="marca" href="/preinscripcion">FIMLM · Jornadas de Apoyo</a>
+  <nav>
+    <a href="/preinscripcion">Preinscripción</a>
+    <% if (currentUser) { %>
+      <a href="/admin">Panel administrativo</a>
+      <form action="/logout" method="post" style="display:inline">
+        <button type="submit" style="background:none;border:none;color:#fff;text-decoration:underline;cursor:pointer;padding:0;font:inherit">Cerrar sesión (<%= currentUser.usuario %>)</button>
+      </form>
+    <% } else { %>
+      <a href="/login">Ingreso administrativo</a>
+    <% } %>
+  </nav>
+</header>

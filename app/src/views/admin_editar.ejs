@@ -1,0 +1,28 @@
+<%- include('partials/head', { titulo: 'Editar beneficiario - FIMLM' }) %>
+<%- include('partials/nav') %>
+
+<main>
+  <div class="card">
+    <p><a href="/admin">&laquo; Volver al listado</a></p>
+    <h1>Editar beneficiario</h1>
+
+    <% if (saved) { %>
+      <div class="alerta exito">Datos actualizados correctamente.</div>
+    <% } %>
+    <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+      <div class="alerta error"><%= errorMessage %></div>
+    <% } %>
+
+    <form action="/admin/beneficiarios/<%= id %>" method="post">
+      <%- include('partials/form_campos', { FIELDS: FIELDS, values: values, showAdminFields: true }) %>
+      <div class="acciones">
+        <button type="submit">Guardar cambios</button>
+        <a class="btn secundario" href="/admin">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<footer class="pie">Fundación Internacional María Luisa de Moreno · Registro de Beneficiarios</footer>
+</body>
+</html>

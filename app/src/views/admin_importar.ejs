@@ -1,0 +1,49 @@
+<%- include('partials/head', { titulo: 'Importar datos - FIMLM' }) %>
+<%- include('partials/nav') %>
+
+<main>
+  <div class="card">
+    <p><a href="/admin">&laquo; Volver al listado</a></p>
+    <h1>Importar beneficiarios desde Excel</h1>
+    <p>
+      Sube un archivo .xlsx con encabezados iguales a los del archivo exportado desde
+      "Exportar a Excel" (o con los nombres de columna de la base de datos). Cada fila se
+      crea si el documento de identidad no existe, o se actualiza si ya existe.
+    </p>
+
+    <% if (errorMessage) { %>
+      <div class="alerta error"><%= errorMessage %></div>
+    <% } %>
+
+    <% if (resultado) { %>
+      <div class="alerta exito">
+        <%= resultado.importados %> fila(s) procesada(s):
+        <%= resultado.creados %> creada(s), <%= resultado.actualizados %> actualizada(s).
+      </div>
+      <% if (resultado.errores.length > 0) { %>
+        <div class="alerta error">
+          <p><strong><%= resultado.errores.length %> fila(s) con error:</strong></p>
+          <ul>
+            <% resultado.errores.forEach(function(e) { %>
+              <li>Fila <%= e.fila %>: <%= e.mensaje %></li>
+            <% }); %>
+          </ul>
+        </div>
+      <% } %>
+    <% } %>
+
+    <form action="/admin/importar" method="post" enctype="multipart/form-data">
+      <div class="campo">
+        <label for="archivo">Archivo Excel (.xlsx)</label>
+        <input type="file" id="archivo" name="archivo" accept=".xlsx" required />
+      </div>
+      <div class="acciones">
+        <button type="submit">Importar</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<footer class="pie">Fundación Internacional María Luisa de Moreno · Registro de Beneficiarios</footer>
+</body>
+</html>

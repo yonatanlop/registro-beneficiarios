@@ -1,0 +1,41 @@
+<%- include('partials/head', { titulo: 'Preinscripción - FIMLM' }) %>
+<%- include('partials/nav') %>
+
+<main>
+  <div class="card">
+    <h1>Buscar beneficiario</h1>
+    <p>Ingresa el número de documento para verificar si la persona ya está registrada y actualizar sus datos. Si no existe, podrás crearla a continuación.</p>
+    <form class="busqueda" action="/preinscripcion/buscar" method="post">
+      <div class="campo">
+        <label for="documento">Documento de identidad</label>
+        <input type="text" id="documento" name="documento" value="<%= documentoBuscado || '' %>" />
+      </div>
+      <button type="submit">Buscar</button>
+    </form>
+  </div>
+
+  <% if (notFound) { %>
+    <div class="alerta info">No se encontró ningún beneficiario con el documento "<%= documentoBuscado %>". Completa el formulario para registrarlo.</div>
+  <% } %>
+  <% if (saved) { %>
+    <div class="alerta exito"><%= created ? 'Beneficiario registrado correctamente.' : 'Datos actualizados correctamente.' %></div>
+  <% } %>
+  <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+    <div class="alerta error"><%= errorMessage %></div>
+  <% } %>
+
+  <div class="card">
+    <h1><%= isUpdate ? 'Actualizar datos del beneficiario' : 'Registrar nuevo beneficiario' %></h1>
+    <form action="/preinscripcion" method="post">
+      <%- include('partials/form_campos', { FIELDS: FIELDS, values: values, showAdminFields: false }) %>
+      <div class="acciones">
+        <button type="submit"><%= isUpdate ? 'Guardar cambios' : 'Registrar' %></button>
+        <a class="btn secundario" href="/preinscripcion">Limpiar formulario</a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<footer class="pie">Fundación Internacional María Luisa de Moreno · Registro de Beneficiarios</footer>
+</body>
+</html>

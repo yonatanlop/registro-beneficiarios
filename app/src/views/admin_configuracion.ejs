@@ -1,0 +1,54 @@
+<%- include('partials/head', { titulo: 'Configuración de cupo - FIMLM' }) %>
+<%- include('partials/nav') %>
+
+<%
+const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100);
+%>
+
+<main>
+  <div class="card">
+    <p><a href="/admin">&laquo; Volver al listado</a></p>
+    <h1>Configuración de cupo</h1>
+    <p>
+      Define cuántos beneficiarios se pueden marcar como "registrado" en total, y
+      qué porcentaje de ese cupo queda reservado para personas externas.
+      Una vez se llena el cupo (total o de externos), el formulario de
+      preinscripción deja de aceptar <strong>nuevos</strong> registros de ese tipo,
+      pero los registros existentes se pueden seguir editando sin límite.
+    </p>
+
+    <% if (saved) { %>
+      <div class="alerta exito">Configuración guardada.</div>
+    <% } %>
+    <% if (errorMessage) { %>
+      <div class="alerta error"><%= errorMessage %></div>
+    <% } %>
+
+    <div class="alerta info">
+      Uso actual: <strong><%= cupo.registrados %></strong> registrados de
+      <strong><%= config.maxRegistros %></strong>, de los cuales
+      <strong><%= cupo.externos %></strong> son externos (cupo de externos:
+      <strong><%= cupoExternos %></strong>).
+    </div>
+
+    <form action="/admin/configuracion" method="post">
+      <div class="grid">
+        <div class="campo">
+          <label for="max_registros">Máximo de registros</label>
+          <input type="number" id="max_registros" name="max_registros" min="1" value="<%= config.maxRegistros %>" required />
+        </div>
+        <div class="campo">
+          <label for="pct_externos">% de externos</label>
+          <input type="number" id="pct_externos" name="pct_externos" min="0" max="100" value="<%= config.pctExternos %>" required />
+        </div>
+      </div>
+      <div class="acciones">
+        <button type="submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<footer class="pie">Fundación Internacional María Luisa de Moreno · Registro de Beneficiarios</footer>
+</body>
+</html>

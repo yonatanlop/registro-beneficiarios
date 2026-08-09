@@ -1,0 +1,14 @@
+node_modules/
+.env
+*.log
+
+# Material fuente y datos con informacion personal real de beneficiarios:
+# nunca deben subirse a un repositorio publico.
+pdf_pages/
+Planillas Jornada de apoyo junio 2025.pdf
+data/transcripcion_junio_2025.xlsx
+
+# Llaves SSH: nunca deben subirse a ningun repositorio.
+*.key
+*.key.pub
+*.pem

@@ -1,0 +1,30 @@
+<%- include('partials/head', { titulo: 'Ingreso administrativo - FIMLM' }) %>
+<%- include('partials/nav') %>
+
+<main>
+  <div class="card login-wrap">
+    <h1>Ingreso administrativo</h1>
+    <% if (errorMessage) { %>
+      <div class="alerta error"><%= errorMessage %></div>
+    <% } %>
+    <form action="/login" method="post">
+      <div class="grid" style="grid-template-columns: 1fr;">
+        <div class="campo">
+          <label for="usuario">Usuario</label>
+          <input type="text" id="usuario" name="usuario" value="<%= usuario %>" required autofocus />
+        </div>
+        <div class="campo">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+      </div>
+      <div class="acciones">
+        <button type="submit">Ingresar</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<footer class="pie">Fundación Internacional María Luisa de Moreno · Registro de Beneficiarios</footer>
+</body>
+</html>

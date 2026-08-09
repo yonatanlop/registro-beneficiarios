@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: fimlm_db
+    environment:
+      POSTGRES_USER: ${PG_USER:-fimlm}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-CambiarClaveAppDb123}
+      POSTGRES_DB: ${PG_DATABASE:-fimlm}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-fimlm} -d ${PG_DATABASE:-fimlm}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  app:
+    build: ./app
+    container_name: fimlm_app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://${PG_USER:-fimlm}:${PG_PASSWORD:-CambiarClaveAppDb123}@db:5432/${PG_DATABASE:-fimlm}
+      PGSSL: "false"
+      SESSION_SECRET: ${SESSION_SECRET:-cambia-este-secreto-largo-y-aleatorio}
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-CambiarEstaClave123}
+    ports:
+      - "3000:3000"
+
+volumes:
+  pg_data:

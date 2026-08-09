@@ -1,5 +1,18 @@
 # FIMLM · Registro de Beneficiarios (Jornadas de Apoyo)
 
+## En producción
+
+- **App:** https://fimlm-preinscripcion.onrender.com/preinscripcion (Render, free tier)
+- **Base de datos:** Neon (Postgres, free tier)
+- **Punto de entrada recomendado:** https://yonatanlop.github.io/fimlm-preinscripcion/
+  — pantalla de espera que aguanta el "cold start" de Render (el free tier
+  duerme el servicio tras 15 min sin visitas y tarda ~30-60s en despertar)
+  y redirige sola a `/preinscripcion` en cuanto la app responde. Compártela
+  a los usuarios en vez del link directo a Render.
+- **Importar los datos del PDF a producción:** `./scripts/importar_datos.sh`
+  (pide usuario/clave admin de forma interactiva, sube
+  `data/transcripcion_junio_2025.xlsx` vía el panel admin).
+
 Mini aplicación web con 3 páginas:
 
 1. **Preinscripción** (`/preinscripcion`, pública): busca a una persona por
@@ -47,14 +60,20 @@ Desde `/admin/configuracion` se define:
 
 ## Arquitectura
 
+> **Nota:** el plan original era desplegar sobre Oracle Cloud + Oracle
+> Database (ver `db/ddl/`, `db/init/`), pero la capacidad gratuita de
+> instancias ARM (Ampere A1) de Oracle no estuvo disponible a tiempo. La
+> app se migró a **Postgres** (`db/postgres/`) para desplegar gratis y sin
+> depender de disponibilidad de nadie, en **Neon + Render**. El código de
+> Oracle se dejó documentado por si se retoma esa ruta más adelante.
+
 - **Backend:** Node.js + Express + EJS (sin frameworks de frontend, para
   mantenerlo simple de operar y desplegar).
-- **Base de datos:** Oracle Database, vía el driver oficial `node-oracledb`
-  en modo *thin* (no requiere instalar Oracle Instant Client).
+- **Base de datos:** Postgres, vía el driver oficial `pg`. En producción,
+  Neon (free tier, serverless, "scale-to-zero"). Ver `db/postgres/001_init.sql`.
 - **Contenedores:** la app se empaqueta en Docker. Para desarrollo/pruebas
-  locales, `docker-compose.yml` también levanta una base Oracle Free
-  (imagen `gvenzl/oracle-free`) para no depender de tener ya un Oracle
-  disponible.
+  locales, `docker-compose.yml` levanta un Postgres en contenedor para no
+  depender de tener ya una base disponible.
 - **Excel:** `exceljs`, tanto para exportar el listado como para leer los
   archivos de importación.
 

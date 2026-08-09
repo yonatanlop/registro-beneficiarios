@@ -89,6 +89,12 @@ select {
   background: #fff;
 }
 input:focus, select:focus { outline: 2px solid var(--azul); }
+input[readonly], select:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+.candado { font-size: 0.85em; opacity: 0.7; }
 
 .checkrow { display: flex; flex-wrap: wrap; gap: 16px; }
 .checkitem { display: flex; align-items: center; gap: 6px; font-weight: 500; }

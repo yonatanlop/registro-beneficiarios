@@ -20,9 +20,12 @@ router.get('/preinscripcion', async (req, res, next) => {
       if (!record) notFound = true;
     }
 
+    const values = toFormValues(record, documento);
+    await aplicarDatosJornada(values);
+
     res.render('preinscripcion', {
       FIELDS,
-      values: toFormValues(record, documento),
+      values,
       isUpdate: !!record,
       notFound,
       documentoBuscado: documento,

@@ -111,9 +111,11 @@ router.get('/beneficiarios/:id/editar', async (req, res, next) => {
   try {
     const record = await beneficiarios.findById(req.params.id);
     if (!record) return res.status(404).render('404');
+    const values = toFormValues(record);
+    await aplicarDatosJornada(values);
     res.render('admin_editar', {
       FIELDS,
-      values: toFormValues(record),
+      values,
       id: record.id,
       saved: false
     });

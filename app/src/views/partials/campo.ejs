@@ -9,9 +9,12 @@ const val = values[f.key];
   </div>
 <% } else { %>
   <div class="campo">
-    <label for="<%= f.key %>"><%= f.label %><% if (f.required) { %> <span class="req">*</span><% } %></label>
+    <label for="<%= f.key %>">
+      <%= f.label %><% if (f.required) { %> <span class="req">*</span><% } %>
+      <% if (f.configOnly) { %> <span class="candado" title="Definido desde Configuración, no editable aquí">🔒</span><% } %>
+    </label>
     <% if (f.type === 'select') { %>
-      <select id="<%= f.key %>" name="<%= f.key %>">
+      <select id="<%= f.key %>" name="<%= f.key %>" <%= f.configOnly ? 'disabled' : '' %>>
         <option value="">--</option>
         <% f.options.forEach(function(opt) { %>
           <option value="<%= opt %>" <%= val === opt ? 'selected' : '' %>>
@@ -26,6 +29,7 @@ const val = values[f.key];
         name="<%= f.key %>"
         value="<%= val || '' %>"
         <%= f.required ? 'required' : '' %>
+        <%= f.configOnly ? 'readonly' : '' %>
       />
     <% } %>
   </div>

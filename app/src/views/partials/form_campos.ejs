@@ -1,6 +1,6 @@
 <%
 const showAdminFields = typeof locals.showAdminFields !== 'undefined' && locals.showAdminFields;
-const porGrupo = (g) => FIELDS.filter(f => f.group === g && !f.configOnly && (!f.adminOnly || showAdminFields));
+const porGrupo = (g) => FIELDS.filter(f => f.group === g && (!f.adminOnly || showAdminFields));
 %>
 
 <h2 class="seccion">Datos del beneficiario</h2>

@@ -2,7 +2,9 @@
 
 ## En producción
 
-- **App:** (pendiente de actualizar aquí tras renombrar el servicio de Render — ver sección "Despliegue")
+- **App:** https://fimlm-preinscripcion.onrender.com/preinscripcion (Render, free tier;
+  Render no permite cambiar el subdominio `.onrender.com` de un servicio ya
+  creado, así que por ahora se queda con este nombre)
 - **Base de datos:** Neon (Postgres, free tier)
 - **Punto de entrada recomendado:** https://yonatanlop.github.io/registro-beneficiarios/
   — pantalla de espera que aguanta el "cold start" de Render (el free tier
@@ -10,7 +12,7 @@
   y redirige sola a `/preinscripcion` en cuanto la app responde. Compártela
   a los usuarios en vez del link directo a Render.
 - **Importar los datos del PDF a producción:**
-  `./scripts/importar_datos.sh https://tu-app.onrender.com`
+  `./scripts/importar_datos.sh https://fimlm-preinscripcion.onrender.com`
   (pide usuario/clave admin de forma interactiva, sube
   `data/transcripcion_junio_2025.xlsx` vía el panel admin).
 
@@ -57,6 +59,27 @@ Desde `/admin/configuracion` se define:
   personas que efectivamente se registraron — útil para el reporte final,
   en vez de exportar también los candidatos importados que nunca se
   presentaron.
+
+## Datos de la jornada (lugar, departamento, actividad, etc.)
+
+Departamento, Municipio, Lugar y dirección, Actividad desarrollada, Línea
+estratégica, Programa, Proyecto y Nombre de los beneficios entregados
+**ya no se piden por persona** en ningún formulario — son una configuración
+global, editable solo desde `/admin/configuracion`, que se aplica sola a
+todo registro que se cree o actualice desde el formulario de preinscripción
+o su edición en el panel admin.
+
+- `Lugar y dirección` viene fijo por defecto en
+  `Calle 1 Sur # 6 - 44 Salón Comunal Florida Parque`; el resto se dejan en
+  blanco hasta que alguien del equipo los complete en esa pantalla.
+- Cambiar estos valores en el panel admin **no** modifica retroactivamente
+  a quienes ya estaban registrados; solo aplica a registros nuevos o a los
+  que se vuelvan a guardar desde ese momento en adelante.
+- La importación masiva desde Excel (`/admin/importar`) **no** se ve
+  afectada por esta configuración: sigue tomando estos valores de las
+  columnas del archivo, para no alterar datos históricos ya cargados (por
+  ejemplo, la transcripción del PDF de junio 2025 conserva "Tunja",
+  "Boyacá", etc. tal como estaban en el documento original).
 
 ## Arquitectura
 
@@ -127,8 +150,9 @@ reales.**
 ## Cómo desplegar (Neon + Render, gratis)
 
 1. **Neon:** crea una cuenta en neon.tech, crea un proyecto, copia el
-   "Connection string" (`postgres://...`), y ejecuta el contenido de
-   `db/postgres/001_init.sql` en su SQL Editor (crea las tablas).
+   "Connection string" (`postgres://...`), y ejecuta en su SQL Editor, en
+   orden, `db/postgres/001_init.sql` y luego cualquier migración posterior
+   que exista en esa carpeta (por ejemplo `002_ajustes_jornada.sql`).
 2. **Render:** crea una cuenta en render.com, conecta este repositorio,
    crea un **Web Service** con:
    - Root Directory: `app`

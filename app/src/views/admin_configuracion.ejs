@@ -42,6 +42,22 @@ const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100
           <input type="number" id="pct_externos" name="pct_externos" min="0" max="100" value="<%= config.pctExternos %>" required />
         </div>
       </div>
+
+      <h2 class="seccion">Datos de la jornada / evento</h2>
+      <p>
+        Estos datos se aplican automáticamente a todo registro nuevo o
+        actualizado desde el formulario de preinscripción o su edición en
+        el panel admin — ya no se piden por persona.
+      </p>
+      <div class="grid">
+        <% CONFIG_ONLY_FIELDS_INFO.forEach(function(f) { %>
+          <div class="campo">
+            <label for="<%= f.key %>"><%= f.label %></label>
+            <input type="text" id="<%= f.key %>" name="<%= f.key %>" value="<%= config[f.key] || '' %>" />
+          </div>
+        <% }); %>
+      </div>
+
       <div class="acciones">
         <button type="submit">Guardar</button>
       </div>

@@ -3,11 +3,19 @@ const multer = require('multer');
 const router = express.Router();
 
 const beneficiarios = require('../lib/beneficiarios');
-const { FIELDS } = require('../lib/fields');
+const { FIELDS, CONFIG_ONLY_FIELDS } = require('../lib/fields');
 const { toFormValues } = require('../lib/viewHelpers');
 const { buildBeneficiariosWorkbook } = require('../lib/excelExport');
 const { importWorkbookBuffer } = require('../lib/excelImport');
-const { getConfiguracion, updateConfiguracion, getCupoStats, checkCupo } = require('../lib/configuracion');
+const {
+  getConfiguracion,
+  updateConfiguracion,
+  getCupoStats,
+  checkCupo,
+  aplicarDatosJornada
+} = require('../lib/configuracion');
+
+const CONFIG_ONLY_FIELDS_INFO = FIELDS.filter((f) => f.configOnly).map((f) => ({ key: f.key, label: f.label }));
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
@@ -52,7 +60,13 @@ router.get('/export', async (req, res, next) => {
 router.get('/configuracion', async (req, res, next) => {
   try {
     const [config, cupo] = await Promise.all([getConfiguracion(), getCupoStats()]);
-    res.render('admin_configuracion', { config, cupo, saved: false, errorMessage: null });
+    res.render('admin_configuracion', {
+      config,
+      cupo,
+      CONFIG_ONLY_FIELDS_INFO,
+      saved: false,
+      errorMessage: null
+    });
   } catch (err) {
     next(err);
   }
@@ -62,21 +76,32 @@ router.post('/configuracion', async (req, res, next) => {
   try {
     const maxRegistros = Number(req.body.max_registros);
     const pctExternos = Number(req.body.pct_externos);
+    const jornada = {};
+    for (const key of CONFIG_ONLY_FIELDS) {
+      jornada[key] = req.body[key] || '';
+    }
 
     if (!Number.isFinite(maxRegistros) || maxRegistros <= 0 ||
         !Number.isFinite(pctExternos) || pctExternos < 0 || pctExternos > 100) {
       const cupo = await getCupoStats();
       return res.status(400).render('admin_configuracion', {
-        config: { maxRegistros, pctExternos },
+        config: { maxRegistros, pctExternos, ...jornada },
         cupo,
+        CONFIG_ONLY_FIELDS_INFO,
         saved: false,
         errorMessage: 'El máximo de registros debe ser mayor a 0, y el % de externos debe estar entre 0 y 100.'
       });
     }
 
-    await updateConfiguracion({ maxRegistros, pctExternos });
+    await updateConfiguracion({ maxRegistros, pctExternos, jornada });
     const [config, cupo] = await Promise.all([getConfiguracion(), getCupoStats()]);
-    res.render('admin_configuracion', { config, cupo, saved: true, errorMessage: null });
+    res.render('admin_configuracion', {
+      config,
+      cupo,
+      CONFIG_ONLY_FIELDS_INFO,
+      saved: true,
+      errorMessage: null
+    });
   } catch (err) {
     next(err);
   }
@@ -112,6 +137,7 @@ router.post('/beneficiarios/:id', async (req, res, next) => {
         errorMessage: 'El documento de identidad y los nombres y apellidos son obligatorios.'
       });
     }
+    await aplicarDatosJornada(data);
 
     try {
       await checkCupo(record, data);

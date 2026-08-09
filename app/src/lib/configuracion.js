@@ -1,24 +1,33 @@
 const { withConnection } = require('../db');
+const { CONFIG_ONLY_FIELDS } = require('./fields');
 
 async function getConfiguracion() {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT max_registros, pct_externos FROM configuracion WHERE id = 1`
+      `SELECT max_registros, pct_externos, ${CONFIG_ONLY_FIELDS.join(', ')}
+         FROM configuracion WHERE id = 1`
     );
     const row = result.rows[0];
-    return { maxRegistros: row.max_registros, pctExternos: row.pct_externos };
+    const config = { maxRegistros: row.max_registros, pctExternos: row.pct_externos };
+    for (const key of CONFIG_ONLY_FIELDS) {
+      config[key] = row[key];
+    }
+    return config;
   });
 }
 
-async function updateConfiguracion({ maxRegistros, pctExternos }) {
+async function updateConfiguracion({ maxRegistros, pctExternos, jornada }) {
   return withConnection(async (client) => {
+    const setJornada = CONFIG_ONLY_FIELDS.map((k, i) => `${k} = $${i + 3}`).join(', ');
+    const jornadaValues = CONFIG_ONLY_FIELDS.map((k) => (jornada[k] === undefined || jornada[k] === '' ? '' : String(jornada[k]).trim()));
     await client.query(
       `UPDATE configuracion
           SET max_registros = $1,
               pct_externos = $2,
+              ${setJornada},
               actualizado_en = now()
         WHERE id = 1`,
-      [maxRegistros, pctExternos]
+      [maxRegistros, pctExternos, ...jornadaValues]
     );
   });
 }
@@ -78,4 +87,23 @@ async function checkCupo(existing, data) {
   }
 }
 
-module.exports = { getConfiguracion, updateConfiguracion, getCupoStats, checkCupo };
+// Aplica los valores de la jornada configurada globalmente sobre `data`
+// (sobreescribe departamento, municipio, lugar_direccion, etc.). Se usa al
+// crear/actualizar desde el formulario de preinscripcion o la edicion en
+// el panel admin; NO se usa en la importacion masiva desde Excel, que debe
+// conservar los valores historicos del archivo importado.
+async function aplicarDatosJornada(data) {
+  const config = await getConfiguracion();
+  for (const key of CONFIG_ONLY_FIELDS) {
+    data[key] = config[key];
+  }
+  return data;
+}
+
+module.exports = {
+  getConfiguracion,
+  updateConfiguracion,
+  getCupoStats,
+  checkCupo,
+  aplicarDatosJornada
+};

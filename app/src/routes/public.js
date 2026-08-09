@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const beneficiarios = require('../lib/beneficiarios');
-const { checkCupo } = require('../lib/configuracion');
+const { checkCupo, aplicarDatosJornada } = require('../lib/configuracion');
 const { FIELDS } = require('../lib/fields');
 const { toFormValues, dateToInputValue } = require('../lib/viewHelpers');
 
@@ -63,6 +63,7 @@ router.post('/preinscripcion', async (req, res, next) => {
         errorMessage: 'El documento de identidad y los nombres y apellidos son obligatorios.'
       });
     }
+    await aplicarDatosJornada(data);
 
     const existing = await beneficiarios.findByDocumento(data.documento_identidad);
 

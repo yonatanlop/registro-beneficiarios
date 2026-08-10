@@ -2,9 +2,7 @@
 <%- include('partials/nav') %>
 
 <%
-const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100);
 const cupoLleno = cupo.registrados >= config.maxRegistros;
-const cupoExternosLleno = cupo.externos >= cupoExternos;
 %>
 
 <main>
@@ -15,8 +13,7 @@ const cupoExternosLleno = cupo.externos >= cupoExternos;
       <strong><%= cupo.registrados %> / <%= config.maxRegistros %></strong> registrados
       <% if (cupoLleno) { %>— cupo lleno, no se aceptan nuevos registros (sí se puede editar).<% } %>
       &nbsp;·&nbsp;
-      <strong><%= cupo.externos %> / <%= cupoExternos %></strong> externos (<%= config.pctExternos %>%)
-      <% if (cupoExternosLleno) { %>— cupo de externos lleno.<% } %>
+      <strong><%= cupo.externos %></strong> marcados como externos
       &nbsp;·&nbsp;<a href="/admin/configuracion">Ajustar cupo</a>
     </div>
 

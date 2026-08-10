@@ -28,20 +28,19 @@ Mini aplicación web con 3 páginas:
    beneficiarios registrados, edición, exportación a Excel (con el mismo
    formato de columnas de la planilla) e importación masiva desde Excel.
 
-## Cupo de registros y % de externos
+## Cupo de registros
 
-Desde `/admin/configuracion` se define:
+Desde `/admin/configuracion` se define el **Máximo de registros** (por
+defecto 150): una vez que esa cantidad de personas queda marcada como
+"registrado", el formulario de preinscripción deja de aceptar **registros
+nuevos** (crear a alguien, o marcar por primera vez como registrado a
+alguien ya existente en la base). Los registros que ya estaban registrados
+**se pueden seguir editando sin límite**.
 
-- **Máximo de registros** (por defecto 150): una vez que esa cantidad de
-  personas queda marcada como "registrado", el formulario de preinscripción
-  deja de aceptar **registros nuevos** (crear a alguien, o marcar por
-  primera vez como registrado a alguien ya existente en la base). Los
-  registros que ya estaban registrados **se pueden seguir editando sin
-  límite**.
-- **% de externos** (por defecto 30%): del cupo anterior, ese porcentaje
-  queda reservado para personas marcadas como "Es externo" en el
-  formulario. Al llenarse, deja de aceptar nuevos externos, pero sigue
-  aceptando registros no-externos si aún hay cupo total disponible.
+El formulario sigue teniendo el checkbox "Es externo" y el panel admin
+sigue contando cuántos hay, pero **el límite del 30% de externos se
+desactivó por decisión del negocio (de momento)** — marcar externos ya no
+bloquea nuevos registros, solo se sigue registrando el dato.
 
 ### Qué significa "registrado"
 

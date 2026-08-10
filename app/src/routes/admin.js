@@ -75,21 +75,23 @@ router.get('/configuracion', async (req, res, next) => {
 router.post('/configuracion', async (req, res, next) => {
   try {
     const maxRegistros = Number(req.body.max_registros);
-    const pctExternos = Number(req.body.pct_externos);
+    // El % de externos ya no se pide en este formulario (validacion
+    // desactivada de momento); se conserva el valor que ya estaba guardado.
+    const actual = await getConfiguracion();
+    const pctExternos = actual.pctExternos;
     const jornada = {};
     for (const key of CONFIG_ONLY_FIELDS) {
       jornada[key] = req.body[key] || '';
     }
 
-    if (!Number.isFinite(maxRegistros) || maxRegistros <= 0 ||
-        !Number.isFinite(pctExternos) || pctExternos < 0 || pctExternos > 100) {
+    if (!Number.isFinite(maxRegistros) || maxRegistros <= 0) {
       const cupo = await getCupoStats();
       return res.status(400).render('admin_configuracion', {
         config: { maxRegistros, pctExternos, ...jornada },
         cupo,
         CONFIG_ONLY_FIELDS_INFO,
         saved: false,
-        errorMessage: 'El máximo de registros debe ser mayor a 0, y el % de externos debe estar entre 0 y 100.'
+        errorMessage: 'El máximo de registros debe ser mayor a 0.'
       });
     }
 

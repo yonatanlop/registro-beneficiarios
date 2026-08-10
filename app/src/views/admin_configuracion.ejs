@@ -1,20 +1,15 @@
 <%- include('partials/head', { titulo: 'Configuración de cupo - Registro de Beneficiarios' }) %>
 <%- include('partials/nav') %>
 
-<%
-const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100);
-%>
-
 <main>
   <div class="card">
     <p><a href="/admin">&laquo; Volver al listado</a></p>
     <h1>Configuración de cupo</h1>
     <p>
-      Define cuántos beneficiarios se pueden marcar como "registrado" en total, y
-      qué porcentaje de ese cupo queda reservado para personas externas.
-      Una vez se llena el cupo (total o de externos), el formulario de
-      preinscripción deja de aceptar <strong>nuevos</strong> registros de ese tipo,
-      pero los registros existentes se pueden seguir editando sin límite.
+      Define cuántos beneficiarios se pueden marcar como "registrado" en total.
+      Una vez se llena el cupo, el formulario de preinscripción deja de
+      aceptar <strong>nuevos</strong> registros, pero los registros existentes
+      se pueden seguir editando sin límite.
     </p>
 
     <% if (saved) { %>
@@ -26,9 +21,9 @@ const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100
 
     <div class="alerta info">
       Uso actual: <strong><%= cupo.registrados %></strong> registrados de
-      <strong><%= config.maxRegistros %></strong>, de los cuales
-      <strong><%= cupo.externos %></strong> son externos (cupo de externos:
-      <strong><%= cupoExternos %></strong>).
+      <strong><%= config.maxRegistros %></strong>
+      (<strong><%= cupo.externos %></strong> marcados como externos, sin límite
+      por ahora).
     </div>
 
     <form action="/admin/configuracion" method="post">
@@ -36,10 +31,6 @@ const cupoExternos = Math.floor((config.maxRegistros * config.pctExternos) / 100
         <div class="campo">
           <label for="max_registros">Máximo de registros</label>
           <input type="number" id="max_registros" name="max_registros" min="1" value="<%= config.maxRegistros %>" required />
-        </div>
-        <div class="campo">
-          <label for="pct_externos">% de externos</label>
-          <input type="number" id="pct_externos" name="pct_externos" min="0" max="100" value="<%= config.pctExternos %>" required />
         </div>
       </div>
 

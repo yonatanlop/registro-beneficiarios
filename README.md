@@ -58,6 +58,10 @@ bloquea nuevos registros, solo se sigue registrando el dato.
   personas que efectivamente se registraron — útil para el reporte final,
   en vez de exportar también los candidatos importados que nunca se
   presentaron.
+- El panel admin (`/admin`) muestra la **fecha y hora exacta** (hora de
+  Bogotá) en la que cada persona pasó a estar "registrado" por primera vez.
+  Volver a editarla después no cambia esa fecha; queda en blanco ("—") para
+  quienes todavía no se han registrado.
 
 ## Datos de la jornada (lugar, departamento, actividad, etc.)
 

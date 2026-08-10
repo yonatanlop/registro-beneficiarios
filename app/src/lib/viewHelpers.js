@@ -31,4 +31,20 @@ function toFormValues(record, documentoPrellenado) {
   return values;
 }
 
-module.exports = { dateToInputValue, toFormValues };
+// Formatea una fecha/hora (timestamp) en horario de Bogota, para mostrar
+// en tablas del panel admin. Devuelve '' si no hay valor.
+function formatDateTime(d) {
+  if (!d) return '';
+  const dt = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(dt.getTime())) return '';
+  return dt.toLocaleString('es-CO', {
+    timeZone: 'America/Bogota',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+module.exports = { dateToInputValue, toFormValues, formatDateTime };

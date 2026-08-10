@@ -46,6 +46,7 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
             <th>Municipio</th>
             <th>Teléfono</th>
             <th>Registrado</th>
+            <th>Fecha y hora de registro</th>
             <th>Externo</th>
             <th></th>
           </tr>
@@ -60,12 +61,13 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
               <td><%= r.municipio || '' %></td>
               <td><%= r.telefono || '' %></td>
               <td><%= r.registrado === 'S' ? 'Sí' : 'No' %></td>
+              <td><%= formatDateTime(r.registrado_en) || '—' %></td>
               <td><%= r.es_externo === 'S' ? 'Sí' : 'No' %></td>
               <td><a class="btn secundario" href="/admin/beneficiarios/<%= r.id %>/editar">Editar</a></td>
             </tr>
           <% }); %>
           <% if (rows.length === 0) { %>
-            <tr><td colspan="9">No hay resultados.</td></tr>
+            <tr><td colspan="10">No hay resultados.</td></tr>
           <% } %>
         </tbody>
       </table>

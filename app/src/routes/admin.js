@@ -4,7 +4,7 @@ const router = express.Router();
 
 const beneficiarios = require('../lib/beneficiarios');
 const { FIELDS, CONFIG_ONLY_FIELDS } = require('../lib/fields');
-const { toFormValues } = require('../lib/viewHelpers');
+const { toFormValues, formatDateTime } = require('../lib/viewHelpers');
 const { buildBeneficiariosWorkbook } = require('../lib/excelExport');
 const { importWorkbookBuffer } = require('../lib/excelImport');
 const {
@@ -33,7 +33,7 @@ router.get('/', async (req, res, next) => {
       getConfiguracion(),
       getCupoStats()
     ]);
-    res.render('admin', { ...result, q: req.query.q || '', config, cupo });
+    res.render('admin', { ...result, q: req.query.q || '', config, cupo, formatDateTime });
   } catch (err) {
     next(err);
   }
@@ -142,6 +142,11 @@ router.post('/beneficiarios/:id', async (req, res, next) => {
       });
     }
     await aplicarDatosJornada(data);
+    // Marca la fecha/hora exacta del registro solo la primera vez que
+    // pasa a estar registrado; si ya lo estaba, no se vuelve a tocar.
+    if (record.registrado !== 'S' && data.registrado === 'S') {
+      data.registrado_en = new Date();
+    }
 
     try {
       await checkCupo(record, data);

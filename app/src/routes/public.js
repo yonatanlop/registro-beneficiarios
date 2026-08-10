@@ -69,6 +69,11 @@ router.post('/preinscripcion', async (req, res, next) => {
     await aplicarDatosJornada(data);
 
     const existing = await beneficiarios.findByDocumento(data.documento_identidad);
+    // Marca la fecha/hora exacta del registro solo la primera vez que
+    // pasa a estar registrado; si ya lo estaba, no se vuelve a tocar.
+    if (!existing || existing.registrado !== 'S') {
+      data.registrado_en = new Date();
+    }
 
     try {
       await checkCupo(existing, data);

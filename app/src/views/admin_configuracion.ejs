@@ -34,6 +34,48 @@
         </div>
       </div>
 
+      <h2 class="seccion">Horarios en los que se permite registrar</h2>
+      <p>
+        El botón "Registrar" del formulario público solo queda habilitado
+        durante las franjas marcadas aquí (hora de Colombia). Fuera de esas
+        franjas, cualquiera puede ver el formulario y buscar, pero no
+        guardar. Editar a alguien que ya está registrado nunca se bloquea
+        por horario.
+      </p>
+      <div class="tabla-wrap">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Franja</th>
+              <% DIAS.forEach(function(d) { %>
+                <th><%= d.label %></th>
+              <% }); %>
+            </tr>
+          </thead>
+          <tbody>
+            <% VENTANAS.forEach(function(v) { %>
+              <tr>
+                <td><%= ventanaLabel(v) %></td>
+                <% DIAS.forEach(function(d) { %>
+                  <%
+                    const marcado = config.horariosHabilitados &&
+                      config.horariosHabilitados[d.key] &&
+                      config.horariosHabilitados[d.key][v.id];
+                  %>
+                  <td style="text-align:center">
+                    <input
+                      type="checkbox"
+                      name="horario[<%= d.key %>][<%= v.id %>]"
+                      <%= marcado ? 'checked' : '' %>
+                    />
+                  </td>
+                <% }); %>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+
       <h2 class="seccion">Datos de la jornada / evento</h2>
       <p>
         Estos datos se aplican automáticamente a todo registro nuevo o

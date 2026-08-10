@@ -14,6 +14,7 @@ const {
   checkCupo,
   aplicarDatosJornada
 } = require('../lib/configuracion');
+const horarios = require('../lib/horarios');
 
 const CONFIG_ONLY_FIELDS_INFO = FIELDS.filter((f) => f.configOnly).map((f) => ({ key: f.key, label: f.label }));
 
@@ -64,6 +65,9 @@ router.get('/configuracion', async (req, res, next) => {
       config,
       cupo,
       CONFIG_ONLY_FIELDS_INFO,
+      DIAS: horarios.DIAS,
+      VENTANAS: horarios.VENTANAS,
+      ventanaLabel: horarios.ventanaLabel,
       saved: false,
       errorMessage: null
     });
@@ -71,6 +75,21 @@ router.get('/configuracion', async (req, res, next) => {
     next(err);
   }
 });
+
+// Reconstruye el objeto { dia: { ventanaId: bool } } a partir de los
+// checkboxes marcados que llegaron en el body (name="horario[dia][id]").
+// Los checkboxes sin marcar simplemente no llegan en el body.
+function parseHorariosBody(body) {
+  const marcados = body.horario || {};
+  const out = {};
+  for (const dia of horarios.DIAS) {
+    out[dia.key] = {};
+    for (const v of horarios.VENTANAS) {
+      out[dia.key][v.id] = !!(marcados[dia.key] && marcados[dia.key][v.id]);
+    }
+  }
+  return out;
+}
 
 router.post('/configuracion', async (req, res, next) => {
   try {
@@ -83,24 +102,31 @@ router.post('/configuracion', async (req, res, next) => {
     for (const key of CONFIG_ONLY_FIELDS) {
       jornada[key] = req.body[key] || '';
     }
+    const horariosHabilitados = parseHorariosBody(req.body);
 
     if (!Number.isFinite(maxRegistros) || maxRegistros <= 0) {
       const cupo = await getCupoStats();
       return res.status(400).render('admin_configuracion', {
-        config: { maxRegistros, pctExternos, ...jornada },
+        config: { maxRegistros, pctExternos, horariosHabilitados, ...jornada },
         cupo,
         CONFIG_ONLY_FIELDS_INFO,
+        DIAS: horarios.DIAS,
+        VENTANAS: horarios.VENTANAS,
+        ventanaLabel: horarios.ventanaLabel,
         saved: false,
         errorMessage: 'El máximo de registros debe ser mayor a 0.'
       });
     }
 
-    await updateConfiguracion({ maxRegistros, pctExternos, jornada });
+    await updateConfiguracion({ maxRegistros, pctExternos, jornada, horariosHabilitados });
     const [config, cupo] = await Promise.all([getConfiguracion(), getCupoStats()]);
     res.render('admin_configuracion', {
       config,
       cupo,
       CONFIG_ONLY_FIELDS_INFO,
+      DIAS: horarios.DIAS,
+      VENTANAS: horarios.VENTANAS,
+      ventanaLabel: horarios.ventanaLabel,
       saved: true,
       errorMessage: null
     });

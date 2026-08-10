@@ -1,14 +1,19 @@
 const { withConnection } = require('../db');
 const { CONFIG_ONLY_FIELDS } = require('./fields');
+const horarios = require('./horarios');
 
 async function getConfiguracion() {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT max_registros, pct_externos, ${CONFIG_ONLY_FIELDS.join(', ')}
+      `SELECT max_registros, pct_externos, horarios_habilitados, ${CONFIG_ONLY_FIELDS.join(', ')}
          FROM configuracion WHERE id = 1`
     );
     const row = result.rows[0];
-    const config = { maxRegistros: row.max_registros, pctExternos: row.pct_externos };
+    const config = {
+      maxRegistros: row.max_registros,
+      pctExternos: row.pct_externos,
+      horariosHabilitados: row.horarios_habilitados || horarios.defaultHorariosHabilitados()
+    };
     for (const key of CONFIG_ONLY_FIELDS) {
       config[key] = row[key];
     }
@@ -16,18 +21,19 @@ async function getConfiguracion() {
   });
 }
 
-async function updateConfiguracion({ maxRegistros, pctExternos, jornada }) {
+async function updateConfiguracion({ maxRegistros, pctExternos, jornada, horariosHabilitados }) {
   return withConnection(async (client) => {
-    const setJornada = CONFIG_ONLY_FIELDS.map((k, i) => `${k} = $${i + 3}`).join(', ');
+    const setJornada = CONFIG_ONLY_FIELDS.map((k, i) => `${k} = $${i + 4}`).join(', ');
     const jornadaValues = CONFIG_ONLY_FIELDS.map((k) => (jornada[k] === undefined || jornada[k] === '' ? '' : String(jornada[k]).trim()));
     await client.query(
       `UPDATE configuracion
           SET max_registros = $1,
               pct_externos = $2,
+              horarios_habilitados = $3::jsonb,
               ${setJornada},
               actualizado_en = now()
         WHERE id = 1`,
-      [maxRegistros, pctExternos, ...jornadaValues]
+      [maxRegistros, pctExternos, JSON.stringify(horariosHabilitados), ...jornadaValues]
     );
   });
 }
@@ -88,10 +94,29 @@ async function aplicarDatosJornada(data) {
   return data;
 }
 
+// Verificacion del lado del servidor: nunca confiar solo en que el boton
+// este deshabilitado en el navegador. Lanza un error si en este momento
+// (hora de Colombia) no hay ninguna franja habilitada.
+async function checkHorarioPermitido() {
+  const config = await getConfiguracion();
+  const ventana = horarios.ventanaActivaAhora(config.horariosHabilitados);
+  if (ventana) return;
+
+  const proxima = horarios.proximaVentana(config.horariosHabilitados);
+  const detalle = proxima
+    ? `Próxima franja habilitada: ${proxima.esHoy ? 'hoy' : horarios.diaLabel(proxima.dia)} ${horarios.ventanaLabel(proxima.ventana)}.`
+    : 'No hay franjas habilitadas configuradas en este momento.';
+
+  const err = new Error(`El registro está cerrado en este momento. ${detalle}`);
+  err.horarioCerrado = true;
+  throw err;
+}
+
 module.exports = {
   getConfiguracion,
   updateConfiguracion,
   getCupoStats,
   checkCupo,
-  aplicarDatosJornada
+  aplicarDatosJornada,
+  checkHorarioPermitido
 };

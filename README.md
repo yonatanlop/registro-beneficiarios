@@ -42,6 +42,29 @@ sigue contando cuántos hay, pero **el límite del 30% de externos se
 desactivó por decisión del negocio (de momento)** — marcar externos ya no
 bloquea nuevos registros, solo se sigue registrando el dato.
 
+## Horarios en los que se permite registrar
+
+Desde `/admin/configuracion` hay una grilla de 7 días × 5 franjas horarias
+fijas (hora de Colombia, sin importar en qué zona horaria corra el
+servidor):
+
+- 08:30–09:30, 09:30–10:30, 11:30–12:45, 18:30–19:30, 19:30–20:30
+
+Cada casilla habilita o deshabilita esa franja para ese día específico —
+no tienen que ser las mismas franjas todos los días. El botón "Registrar"
+del formulario público (`/preinscripcion`) solo queda habilitado mientras
+la hora actual de Colombia caiga dentro de alguna franja habilitada para
+el día de hoy; el resto del tiempo se ve deshabilitado, con un aviso de
+cuál es la próxima franja disponible. Esto se revisa en el navegador cada
+15 segundos (sin recargar la página) y **también se valida en el
+servidor**, así que aunque alguien manipule el botón desde las
+herramientas de desarrollador, el guardado se rechaza igual si está fuera
+de horario.
+
+Esta restricción solo aplica a **guardar** desde el formulario público
+(crear o actualizar). Buscar/consultar siempre está disponible, y la
+edición desde el panel admin nunca se bloquea por horario.
+
 ### Qué significa "registrado"
 
 - Los datos que se cargan por `/admin/importar` (por ejemplo, la

@@ -26,10 +26,27 @@
 
   <div class="card">
     <h1><%= isUpdate ? 'Actualizar datos del beneficiario' : 'Registrar nuevo beneficiario' %></h1>
-    <form action="/preinscripcion" method="post">
+
+    <%
+      let bannerClase = 'error';
+      let bannerTexto = 'El registro está cerrado y no hay franjas habilitadas configuradas.';
+      if (horario.permitido) {
+        bannerClase = 'exito';
+        bannerTexto = `Registro abierto ahora (${horario.ventanaActiva.inicio} - ${horario.ventanaActiva.fin}). Puedes guardar.`;
+      } else if (horario.proxima) {
+        const diaInfo = horario.DIAS.find(d => d.key === horario.proxima.dia);
+        const diaTxt = horario.proxima.esHoy ? 'hoy' : (diaInfo ? diaInfo.label : horario.proxima.dia);
+        bannerTexto = `El registro está cerrado en este momento. Próxima franja habilitada: ${diaTxt} ${horario.proxima.ventana.inicio} - ${horario.proxima.ventana.fin}.`;
+      }
+    %>
+    <div id="bannerHorario" class="alerta <%= bannerClase %>"><%= bannerTexto %></div>
+
+    <form action="/preinscripcion" method="post" id="formPreinscripcion">
       <%- include('partials/form_campos', { FIELDS: FIELDS, values: values, showAdminFields: false }) %>
       <div class="acciones">
-        <button type="submit"><%= isUpdate ? 'Guardar cambios' : 'Registrar' %></button>
+        <button type="submit" id="btnRegistrar" <%= horario.permitido ? '' : 'disabled' %>>
+          <%= isUpdate ? 'Guardar cambios' : 'Registrar' %>
+        </button>
         <a class="btn secundario" href="/preinscripcion">Limpiar formulario</a>
       </div>
     </form>
@@ -37,5 +54,92 @@
 </main>
 
 <footer class="pie">Registro de Beneficiarios · Jornadas de Apoyo</footer>
+
+<script>
+  var HORARIOS_HABILITADOS = <%- JSON.stringify(horario.horariosHabilitados) %>;
+  var VENTANAS = <%- JSON.stringify(horario.VENTANAS) %>;
+  var DIAS = <%- JSON.stringify(horario.DIAS) %>;
+  var DIA_EN_A_KEY = {
+    Monday: 'lunes', Tuesday: 'martes', Wednesday: 'miercoles', Thursday: 'jueves',
+    Friday: 'viernes', Saturday: 'sabado', Sunday: 'domingo'
+  };
+  var ORDEN_DIAS = DIAS.map(function (d) { return d.key; });
+
+  function diaLabel(key) {
+    var d = DIAS.filter(function (x) { return x.key === key; })[0];
+    return d ? d.label : key;
+  }
+  function ventanaLabel(v) { return v.inicio + ' - ' + v.fin; }
+  function aMinutos(hhmm) {
+    var partes = hhmm.split(':');
+    return Number(partes[0]) * 60 + Number(partes[1]);
+  }
+  function nowBogota() {
+    var partes = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Bogota', weekday: 'long', hour: '2-digit', minute: '2-digit', hour12: false
+    }).formatToParts(new Date());
+    var map = {};
+    partes.forEach(function (p) { map[p.type] = p.value; });
+    var hour = Number(map.hour);
+    if (hour === 24) hour = 0;
+    return { dia: DIA_EN_A_KEY[map.weekday], minutos: hour * 60 + Number(map.minute) };
+  }
+  function ventanaActivaAhora() {
+    var estado = nowBogota();
+    var habilitadasHoy = (HORARIOS_HABILITADOS && HORARIOS_HABILITADOS[estado.dia]) || {};
+    for (var i = 0; i < VENTANAS.length; i++) {
+      var v = VENTANAS[i];
+      if (!habilitadasHoy[v.id]) continue;
+      if (estado.minutos >= aMinutos(v.inicio) && estado.minutos < aMinutos(v.fin)) return v;
+    }
+    return null;
+  }
+  function proximaVentana() {
+    var estado = nowBogota();
+    var idxHoy = ORDEN_DIAS.indexOf(estado.dia);
+    for (var offset = 0; offset <= 7; offset++) {
+      var idx = (idxHoy + offset) % 7;
+      var diaKey = ORDEN_DIAS[idx];
+      var habilitadasEseDia = (HORARIOS_HABILITADOS && HORARIOS_HABILITADOS[diaKey]) || {};
+      for (var i = 0; i < VENTANAS.length; i++) {
+        var v = VENTANAS[i];
+        if (!habilitadasEseDia[v.id]) continue;
+        if (offset === 0 && aMinutos(v.inicio) <= estado.minutos) continue;
+        return { dia: diaKey, ventana: v, esHoy: offset === 0 };
+      }
+    }
+    return null;
+  }
+
+  function actualizarBanner() {
+    var banner = document.getElementById('bannerHorario');
+    var boton = document.getElementById('btnRegistrar');
+    var activa = ventanaActivaAhora();
+    if (activa) {
+      banner.className = 'alerta exito';
+      banner.textContent = 'Registro abierto ahora (' + ventanaLabel(activa) + '). Puedes guardar.';
+      boton.disabled = false;
+    } else {
+      var proxima = proximaVentana();
+      banner.className = 'alerta error';
+      if (proxima) {
+        banner.textContent = 'El registro está cerrado en este momento. Próxima franja habilitada: ' +
+          (proxima.esHoy ? 'hoy' : diaLabel(proxima.dia)) + ' ' + ventanaLabel(proxima.ventana) + '.';
+      } else {
+        banner.textContent = 'El registro está cerrado y no hay franjas habilitadas configuradas.';
+      }
+      boton.disabled = true;
+    }
+  }
+
+  actualizarBanner();
+  setInterval(actualizarBanner, 15000);
+
+  document.getElementById('formPreinscripcion').addEventListener('submit', function (e) {
+    if (document.getElementById('btnRegistrar').disabled) {
+      e.preventDefault();
+    }
+  });
+</script>
 </body>
 </html>

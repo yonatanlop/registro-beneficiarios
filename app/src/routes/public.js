@@ -2,9 +2,25 @@ const express = require('express');
 const router = express.Router();
 
 const beneficiarios = require('../lib/beneficiarios');
-const { checkCupo, aplicarDatosJornada } = require('../lib/configuracion');
+const { checkCupo, aplicarDatosJornada, checkHorarioPermitido, getConfiguracion } = require('../lib/configuracion');
 const { FIELDS } = require('../lib/fields');
 const { toFormValues, dateToInputValue } = require('../lib/viewHelpers');
+const horarios = require('../lib/horarios');
+
+// Arma los datos que necesita la vista para mostrar el banner de horario y
+// dejar que el JS del navegador reevalue el estado del boton en vivo.
+function estadoHorario(config) {
+  const ventanaActiva = horarios.ventanaActivaAhora(config.horariosHabilitados);
+  const proxima = ventanaActiva ? null : horarios.proximaVentana(config.horariosHabilitados);
+  return {
+    permitido: !!ventanaActiva,
+    ventanaActiva,
+    proxima,
+    horariosHabilitados: config.horariosHabilitados,
+    VENTANAS: horarios.VENTANAS,
+    DIAS: horarios.DIAS
+  };
+}
 
 router.get('/', (req, res) => res.redirect('/preinscripcion'));
 
@@ -22,6 +38,7 @@ router.get('/preinscripcion', async (req, res, next) => {
 
     const values = toFormValues(record, documento);
     await aplicarDatosJornada(values);
+    const config = await getConfiguracion();
 
     res.render('preinscripcion', {
       FIELDS,
@@ -29,7 +46,8 @@ router.get('/preinscripcion', async (req, res, next) => {
       isUpdate: !!record,
       notFound,
       documentoBuscado: documento,
-      saved: false
+      saved: false,
+      horario: estadoHorario(config)
     });
   } catch (err) {
     next(err);
@@ -52,10 +70,33 @@ router.post('/preinscripcion', async (req, res, next) => {
     // hasta que la persona se registre por aqui.
     data.registrado = 'S';
 
+    // Verificacion del lado del servidor: el boton se deshabilita en el
+    // navegador fuera de horario, pero nunca hay que confiar solo en eso.
+    try {
+      await checkHorarioPermitido();
+    } catch (horarioErr) {
+      if (!horarioErr.horarioCerrado) throw horarioErr;
+      const record = data.documento_identidad
+        ? await beneficiarios.findByDocumento(data.documento_identidad)
+        : null;
+      const config = await getConfiguracion();
+      return res.status(403).render('preinscripcion', {
+        FIELDS,
+        values: req.body,
+        isUpdate: !!record,
+        notFound: false,
+        documentoBuscado: data.documento_identidad,
+        saved: false,
+        errorMessage: horarioErr.message,
+        horario: estadoHorario(config)
+      });
+    }
+
     if (!data.documento_identidad || !data.nombres_apellidos) {
       const record = data.documento_identidad
         ? await beneficiarios.findByDocumento(data.documento_identidad)
         : null;
+      const config = await getConfiguracion();
       return res.status(400).render('preinscripcion', {
         FIELDS,
         values: req.body,
@@ -63,7 +104,8 @@ router.post('/preinscripcion', async (req, res, next) => {
         notFound: false,
         documentoBuscado: data.documento_identidad,
         saved: false,
-        errorMessage: 'El documento de identidad y los nombres y apellidos son obligatorios.'
+        errorMessage: 'El documento de identidad y los nombres y apellidos son obligatorios.',
+        horario: estadoHorario(config)
       });
     }
     await aplicarDatosJornada(data);
@@ -79,6 +121,7 @@ router.post('/preinscripcion', async (req, res, next) => {
       await checkCupo(existing, data);
     } catch (cupoErr) {
       if (!cupoErr.cupoExceeded) throw cupoErr;
+      const config = await getConfiguracion();
       return res.status(400).render('preinscripcion', {
         FIELDS,
         values: req.body,
@@ -86,11 +129,13 @@ router.post('/preinscripcion', async (req, res, next) => {
         notFound: false,
         documentoBuscado: data.documento_identidad,
         saved: false,
-        errorMessage: cupoErr.message
+        errorMessage: cupoErr.message,
+        horario: estadoHorario(config)
       });
     }
 
     const { row, created } = await beneficiarios.upsert(data);
+    const config = await getConfiguracion();
 
     res.render('preinscripcion', {
       FIELDS,
@@ -99,7 +144,8 @@ router.post('/preinscripcion', async (req, res, next) => {
       notFound: false,
       documentoBuscado: row.documento_identidad,
       saved: true,
-      created
+      created,
+      horario: estadoHorario(config)
     });
   } catch (err) {
     if (err && err.errorNum === 1) {

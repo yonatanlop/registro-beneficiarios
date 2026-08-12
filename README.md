@@ -244,3 +244,12 @@ original, por lo que también llegó vacío en la transcripción.
   registrarlo por primera vez (`INSERT`), también marcado como "registrado".
 - El documento de identidad es la clave única de cada beneficiario: no se
   pueden crear dos registros con el mismo documento.
+
+## Eliminar un registro por error
+
+Desde el panel admin, tanto en el listado (`/admin`) como en la edición
+individual de una persona, hay un botón **"Eliminar"** (rojo) que borra el
+registro definitivamente, con un cuadro de confirmación que muestra el
+nombre y documento antes de proceder. Es una acción irreversible: no hay
+"papelera" ni forma de deshacerla después. El cupo de registros y las
+estadísticas del panel se actualizan solos al eliminar.

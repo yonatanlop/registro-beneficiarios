@@ -147,6 +147,18 @@ async function listAll({ soloRegistrados = false } = {}) {
   });
 }
 
+// Elimina un beneficiario definitivamente. Devuelve el registro borrado
+// (o null si no existia), para poder confirmar/mostrar a quien se borro.
+async function deleteById(id) {
+  return withConnection(async (client) => {
+    const result = await client.query(
+      `DELETE FROM beneficiarios WHERE id = $1 RETURNING id, nombres_apellidos, documento_identidad`,
+      [id]
+    );
+    return result.rows[0] || null;
+  });
+}
+
 module.exports = {
   ALL_KEYS,
   normalizeInput,
@@ -155,5 +167,6 @@ module.exports = {
   upsert,
   search,
   listAll,
+  deleteById,
   PAGE_SIZE
 };

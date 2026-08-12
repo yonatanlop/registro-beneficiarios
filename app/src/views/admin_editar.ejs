@@ -20,9 +20,16 @@
         <a class="btn secundario" href="/admin">Cancelar</a>
       </div>
     </form>
+
+    <form action="/admin/beneficiarios/<%= id %>/eliminar" method="post" class="form-eliminar"
+          data-nombre="<%= values.nombres_apellidos %>" data-documento="<%= values.documento_identidad %>"
+          style="margin-top:16px">
+      <button type="submit" class="peligro">Eliminar este beneficiario</button>
+    </form>
   </div>
 </main>
 
 <footer class="pie">Registro de Beneficiarios · Jornadas de Apoyo</footer>
+<%- include('partials/confirmar_eliminar') %>
 </body>
 </html>

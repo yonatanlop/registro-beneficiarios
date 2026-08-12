@@ -125,6 +125,9 @@ button, .btn {
 button:hover, .btn:hover { background: var(--azul-oscuro); }
 .btn.secundario { background: #fff; color: var(--azul); border: 1px solid var(--azul); }
 .btn.secundario:hover { background: #eef4fb; }
+.btn.peligro, button.peligro { background: #fff; color: var(--rojo); border: 1px solid var(--rojo); }
+.btn.peligro:hover, button.peligro:hover { background: #fdecea; }
+.btn-fila { display: inline-flex; gap: 6px; }
 
 .alerta {
   padding: 12px 16px;

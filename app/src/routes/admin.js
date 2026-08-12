@@ -34,7 +34,14 @@ router.get('/', async (req, res, next) => {
       getConfiguracion(),
       getCupoStats()
     ]);
-    res.render('admin', { ...result, q: req.query.q || '', config, cupo, formatDateTime });
+    res.render('admin', {
+      ...result,
+      q: req.query.q || '',
+      config,
+      cupo,
+      formatDateTime,
+      eliminado: req.query.eliminado || null
+    });
   } catch (err) {
     next(err);
   }
@@ -194,6 +201,16 @@ router.post('/beneficiarios/:id', async (req, res, next) => {
       id: row.id,
       saved: true
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/beneficiarios/:id/eliminar', async (req, res, next) => {
+  try {
+    const eliminado = await beneficiarios.deleteById(req.params.id);
+    if (!eliminado) return res.status(404).render('404');
+    res.redirect('/admin?eliminado=' + encodeURIComponent(eliminado.nombres_apellidos));
   } catch (err) {
     next(err);
   }

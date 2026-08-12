@@ -1,0 +1,10 @@
+<script>
+  document.querySelectorAll('.form-eliminar').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      var nombre = form.dataset.nombre || '';
+      var doc = form.dataset.documento || '';
+      var ok = confirm('¿Eliminar definitivamente a "' + nombre + '" (documento ' + doc + ')? Esta acción no se puede deshacer.');
+      if (!ok) e.preventDefault();
+    });
+  });
+</script>

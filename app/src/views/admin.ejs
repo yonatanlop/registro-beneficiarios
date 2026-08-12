@@ -9,6 +9,10 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
   <div class="card">
     <h1>Beneficiarios registrados</h1>
 
+    <% if (eliminado) { %>
+      <div class="alerta exito">Se eliminó a "<%= eliminado %>".</div>
+    <% } %>
+
     <div class="alerta <%= cupoLleno ? 'error' : 'info' %>">
       <strong><%= cupo.registrados %> / <%= config.maxRegistros %></strong> registrados
       <% if (cupoLleno) { %>— cupo lleno, no se aceptan nuevos registros (sí se puede editar).<% } %>
@@ -63,7 +67,13 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
               <td><%= r.registrado === 'S' ? 'Sí' : 'No' %></td>
               <td><%= formatDateTime(r.registrado_en) || '—' %></td>
               <td><%= r.es_externo === 'S' ? 'Sí' : 'No' %></td>
-              <td><a class="btn secundario" href="/admin/beneficiarios/<%= r.id %>/editar">Editar</a></td>
+              <td class="btn-fila">
+                <a class="btn secundario" href="/admin/beneficiarios/<%= r.id %>/editar">Editar</a>
+                <form action="/admin/beneficiarios/<%= r.id %>/eliminar" method="post" class="form-eliminar"
+                      data-nombre="<%= r.nombres_apellidos %>" data-documento="<%= r.documento_identidad %>">
+                  <button type="submit" class="peligro">Eliminar</button>
+                </form>
+              </td>
             </tr>
           <% }); %>
           <% if (rows.length === 0) { %>
@@ -84,6 +94,8 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
     </div>
   </div>
 </main>
+
+<%- include('partials/confirmar_eliminar') %>
 
 <footer class="pie">Registro de Beneficiarios · Jornadas de Apoyo</footer>
 </body>

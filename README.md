@@ -83,8 +83,13 @@ edición desde el panel admin nunca se bloquea por horario.
   presentaron.
 - **Exportar registrados vs. pendientes (2 hojas)**: un solo archivo de
   Excel, sin modificar ningún dato, con dos pestañas — "Registrados" (con
-  la cantidad en el título) y "No registrados" — para ver de un vistazo
-  quién de la base ya se inscribió y quién todavía falta.
+  la cantidad en el título) y "No registrados". **Se limita exclusivamente
+  a las 97 personas de la carga masiva original** (`transcripcion_junio_2025.xlsx`);
+  alguien que se registre desde el formulario público sin haber estado en
+  esa lista original no aparece en este reporte (sigue existiendo
+  normalmente en el resto del sistema, solo no cuenta aquí). Esto se
+  controla con la columna `origen_importado`, que se fija una sola vez al
+  crear cada registro y no cambia después.
 - El panel admin (`/admin`) muestra la **fecha y hora exacta** (hora de
   Bogotá) en la que cada persona pasó a estar "registrado" por primera vez.
   Volver a editarla después no cambia esa fecha; queda en blanco ("—") para

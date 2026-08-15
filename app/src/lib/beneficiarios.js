@@ -26,7 +26,7 @@ async function findByDocumento(documento) {
   if (!documento) return null;
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, creado_en, actualizado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, creado_en, actualizado_en
          FROM beneficiarios
         WHERE documento_identidad = $1`,
       [documento.trim()]
@@ -38,7 +38,7 @@ async function findByDocumento(documento) {
 async function findById(id) {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, creado_en, actualizado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, creado_en, actualizado_en
          FROM beneficiarios
         WHERE id = $1`,
       [id]
@@ -56,6 +56,12 @@ async function findById(id) {
 // primera vez que registrado pasa de 'N' a 'S'. Si no viene, no se toca
 // esa columna (se conserva lo que ya hubiera en un UPDATE, o queda NULL
 // en un INSERT nuevo).
+//
+// `data.origen_importado` ('S'/'N') solo se usa al CREAR un registro
+// nuevo (marca si vino de una carga masiva por Excel o de alguien
+// registrandose por su cuenta). En un UPDATE nunca se toca esa columna,
+// aunque venga en `data` — el origen de un registro no cambia despues de
+// creado.
 async function upsert(data) {
   return withConnection(async (client) => {
     const existing = await client.query(
@@ -80,9 +86,9 @@ async function upsert(data) {
       return { row, created: false };
     }
 
-    const cols = [...ALL_KEYS, 'registrado_en'];
+    const cols = [...ALL_KEYS, 'registrado_en', 'origen_importado'];
     const placeholders = cols.map((_, i) => `$${i + 1}`).join(', ');
-    const values = [...ALL_KEYS.map((k) => data[k]), data.registrado_en || null];
+    const values = [...ALL_KEYS.map((k) => data[k]), data.registrado_en || null, data.origen_importado || 'N'];
     const result = await client.query(
       `INSERT INTO beneficiarios (${cols.join(', ')}) VALUES (${placeholders}) RETURNING id`,
       values
@@ -147,6 +153,23 @@ async function listAll({ soloRegistrados = false } = {}) {
   });
 }
 
+// Solo las personas que vinieron de la carga masiva original (Excel/PDF),
+// sin importar si ya se registraron o no. Se usa para el reporte
+// "registrados vs. pendientes" del panel admin, que compara
+// exclusivamente contra esa lista original — sin mezclar a alguien nuevo
+// que se registro por su cuenta desde el formulario publico.
+async function listOriginalesImportados() {
+  return withConnection(async (client) => {
+    const result = await client.query(
+      `SELECT id, ${ALL_KEYS.join(', ')}
+         FROM beneficiarios
+        WHERE origen_importado = 'S'
+        ORDER BY municipio, nombres_apellidos`
+    );
+    return result.rows;
+  });
+}
+
 // Elimina un beneficiario definitivamente. Devuelve el registro borrado
 // (o null si no existia), para poder confirmar/mostrar a quien se borro.
 async function deleteById(id) {
@@ -167,6 +190,7 @@ module.exports = {
   upsert,
   search,
   listAll,
+  listOriginalesImportados,
   deleteById,
   PAGE_SIZE
 };

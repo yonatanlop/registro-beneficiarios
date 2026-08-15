@@ -74,13 +74,13 @@ async function buildBeneficiariosWorkbookSeparado(rows) {
   addBeneficiariosSheet(
     wb,
     'Registrados',
-    `YA SE REGISTRARON (${registrados.length})`,
+    `DE LA LISTA ORIGINAL: YA SE REGISTRARON (${registrados.length})`,
     registrados
   );
   addBeneficiariosSheet(
     wb,
     'No registrados',
-    `AÚN NO SE HAN REGISTRADO (${noRegistrados.length})`,
+    `DE LA LISTA ORIGINAL: AÚN NO SE HAN REGISTRADO (${noRegistrados.length})`,
     noRegistrados
   );
 

@@ -55,11 +55,13 @@ router.get('/export', async (req, res, next) => {
     let wb;
     let filename;
     if (separado) {
-      // Un solo archivo de solo lectura con 2 hojas: quienes ya se
-      // registraron y quienes todavia no. No modifica ningun dato.
-      const rows = await beneficiarios.listAll();
+      // Un solo archivo de solo lectura con 2 hojas: de la LISTA ORIGINAL
+      // importada (Excel/PDF), quienes ya se registraron y quienes
+      // todavia no. No incluye a nadie que se haya registrado por su
+      // cuenta sin estar en esa lista original, y no modifica ningun dato.
+      const rows = await beneficiarios.listOriginalesImportados();
       wb = await buildBeneficiariosWorkbookSeparado(rows);
-      filename = 'beneficiarios_registrados_vs_pendientes.xlsx';
+      filename = 'beneficiarios_originales_registrados_vs_pendientes.xlsx';
     } else {
       const rows = await beneficiarios.listAll({ soloRegistrados });
       wb = await buildBeneficiariosWorkbook(rows);

@@ -100,6 +100,10 @@ async function importWorkbookBuffer(buffer) {
         errores.push({ fila: r, mensaje: 'Falta documento de identidad o nombres y apellidos.' });
         continue;
       }
+      // Marca el origen como "carga masiva" solo si esta fila termina
+      // creando un registro nuevo; si ya existia, su origen original no
+      // se toca (ver comentario en beneficiarios.upsert).
+      data.origen_importado = 'S';
 
       const { created } = await beneficiarios.upsert(data);
       importados += 1;

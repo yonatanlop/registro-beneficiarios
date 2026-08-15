@@ -8,3 +8,4 @@ ALTER SESSION SET CURRENT_SCHEMA = REGISTRO;
 @/opt/ddl/03_ajustes_jornada.sql
 @/opt/ddl/04_fecha_registro.sql
 @/opt/ddl/05_horarios_registro.sql
+@/opt/ddl/06_origen_importado.sql

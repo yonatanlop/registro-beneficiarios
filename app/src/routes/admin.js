@@ -5,7 +5,7 @@ const router = express.Router();
 const beneficiarios = require('../lib/beneficiarios');
 const { FIELDS, CONFIG_ONLY_FIELDS } = require('../lib/fields');
 const { toFormValues, formatDateTime } = require('../lib/viewHelpers');
-const { buildBeneficiariosWorkbook } = require('../lib/excelExport');
+const { buildBeneficiariosWorkbook, buildBeneficiariosWorkbookSeparado } = require('../lib/excelExport');
 const { importWorkbookBuffer } = require('../lib/excelImport');
 const {
   getConfiguracion,
@@ -49,14 +49,27 @@ router.get('/', async (req, res, next) => {
 
 router.get('/export', async (req, res, next) => {
   try {
+    const separado = req.query.vista === 'separado';
     const soloRegistrados = req.query.solo_registrados === '1';
-    const rows = await beneficiarios.listAll({ soloRegistrados });
-    const wb = await buildBeneficiariosWorkbook(rows);
+
+    let wb;
+    let filename;
+    if (separado) {
+      // Un solo archivo de solo lectura con 2 hojas: quienes ya se
+      // registraron y quienes todavia no. No modifica ningun dato.
+      const rows = await beneficiarios.listAll();
+      wb = await buildBeneficiariosWorkbookSeparado(rows);
+      filename = 'beneficiarios_registrados_vs_pendientes.xlsx';
+    } else {
+      const rows = await beneficiarios.listAll({ soloRegistrados });
+      wb = await buildBeneficiariosWorkbook(rows);
+      filename = soloRegistrados ? 'beneficiarios_registrados.xlsx' : 'beneficiarios_todos.xlsx';
+    }
+
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     );
-    const filename = soloRegistrados ? 'beneficiarios_registrados.xlsx' : 'beneficiarios_todos.xlsx';
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     await wb.xlsx.write(res);
     res.end();

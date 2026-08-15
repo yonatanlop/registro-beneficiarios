@@ -9,18 +9,14 @@ function cellValue(field, row) {
   return v === null || v === undefined ? '' : v;
 }
 
-async function buildBeneficiariosWorkbook(rows) {
-  const wb = new ExcelJS.Workbook();
-  wb.creator = 'Registro de Beneficiarios';
-  wb.created = new Date();
-
-  const sheet = wb.addWorksheet('Beneficiarios', {
+function addBeneficiariosSheet(wb, nombreHoja, titulo, rows) {
+  const sheet = wb.addWorksheet(nombreHoja, {
     views: [{ state: 'frozen', ySplit: 2 }]
   });
 
   sheet.mergeCells(1, 1, 1, FIELDS.length + 1);
   const title = sheet.getCell(1, 1);
-  title.value = 'PLANILLA DE REGISTRO DE BENEFICIARIOS';
+  title.value = titulo;
   title.font = { bold: true, size: 14 };
   title.alignment = { horizontal: 'center' };
 
@@ -53,7 +49,42 @@ async function buildBeneficiariosWorkbook(rows) {
     to: { row: 2, column: FIELDS.length + 1 }
   };
 
+  return sheet;
+}
+
+async function buildBeneficiariosWorkbook(rows) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Registro de Beneficiarios';
+  wb.created = new Date();
+  addBeneficiariosSheet(wb, 'Beneficiarios', 'PLANILLA DE REGISTRO DE BENEFICIARIOS', rows);
   return wb;
 }
 
-module.exports = { buildBeneficiariosWorkbook };
+// Un solo archivo, de solo lectura (no modifica ningun dato), con dos
+// hojas: quienes ya se registraron (registrado = 'S') y quienes todavia
+// no (candidatos importados que aun no han pasado por el formulario).
+async function buildBeneficiariosWorkbookSeparado(rows) {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Registro de Beneficiarios';
+  wb.created = new Date();
+
+  const registrados = rows.filter((r) => r.registrado === 'S');
+  const noRegistrados = rows.filter((r) => r.registrado !== 'S');
+
+  addBeneficiariosSheet(
+    wb,
+    'Registrados',
+    `YA SE REGISTRARON (${registrados.length})`,
+    registrados
+  );
+  addBeneficiariosSheet(
+    wb,
+    'No registrados',
+    `AÚN NO SE HAN REGISTRADO (${noRegistrados.length})`,
+    noRegistrados
+  );
+
+  return wb;
+}
+
+module.exports = { buildBeneficiariosWorkbook, buildBeneficiariosWorkbookSeparado };

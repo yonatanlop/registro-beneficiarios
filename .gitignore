@@ -7,6 +7,7 @@ node_modules/
 pdf_pages/
 Planillas Jornada de apoyo junio 2025.pdf
 data/transcripcion_junio_2025.xlsx
+Pagina/
 
 # Llaves SSH: nunca deben subirse a ningun repositorio.
 *.key

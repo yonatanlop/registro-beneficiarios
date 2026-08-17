@@ -262,3 +262,19 @@ registro definitivamente, con un cuadro de confirmación que muestra el
 nombre y documento antes de proceder. Es una acción irreversible: no hay
 "papelera" ni forma de deshacerla después. El cupo de registros y las
 estadísticas del panel se actualizan solos al eliminar.
+
+## Consulta RUI / Sisbén (verificación de vulnerabilidad)
+
+El panel admin (tabla y export a Excel) muestra dos columnas de solo
+lectura, **RUI** y **Sisbén**, con el resultado de consultar a cada
+beneficiario ya registrado contra la Consulta RUI pública de
+`ventanillasocial.dnp.gov.co`. Esto permite verificar el nivel de
+vulnerabilidad de cada persona antes de entregar las ayudas.
+
+Esa consulta **no la hace la app** (no corre en Render): se ejecuta con un
+script aparte, [`scripts/consultar_dnp`](scripts/consultar_dnp/README.md),
+que se corre a mano apuntando a la base de datos. El resultado se guarda en
+`beneficiarios.resultado_rui` / `resultado_sisben` / `consulta_dnp_en`, que
+son columnas independientes de las que se editan desde los formularios: al
+guardar o editar un beneficiario (formulario público o panel admin) nunca
+se borra el resultado ya guardado.

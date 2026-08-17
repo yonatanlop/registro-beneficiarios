@@ -1,0 +1,14 @@
+{
+  "name": "consultar-dnp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consulta RUI/Sisben (ventanillasocial.dnp.gov.co) para los beneficiarios registrados y guarda el resultado en la base de datos.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "puppeteer": "^25.8.0"
+  }
+}

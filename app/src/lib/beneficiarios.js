@@ -22,11 +22,13 @@ function normalizeInput(body) {
   return data;
 }
 
+const RESULTADO_DNP_KEYS = ['resultado_rui', 'resultado_sisben', 'consulta_dnp_en'];
+
 async function findByDocumento(documento) {
   if (!documento) return null;
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, creado_en, actualizado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, ${RESULTADO_DNP_KEYS.join(', ')}, creado_en, actualizado_en
          FROM beneficiarios
         WHERE documento_identidad = $1`,
       [documento.trim()]
@@ -38,7 +40,7 @@ async function findByDocumento(documento) {
 async function findById(id) {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, creado_en, actualizado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, ${RESULTADO_DNP_KEYS.join(', ')}, creado_en, actualizado_en
          FROM beneficiarios
         WHERE id = $1`,
       [id]
@@ -122,7 +124,7 @@ async function search({ q, page = 1 } = {}) {
     const limitIdx = binds.length + 1;
     const offsetIdx = binds.length + 2;
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, ${RESULTADO_DNP_KEYS.join(', ')}
          FROM beneficiarios
          ${where}
         ORDER BY nombres_apellidos
@@ -144,12 +146,47 @@ async function listAll({ soloRegistrados = false } = {}) {
   return withConnection(async (client) => {
     const where = soloRegistrados ? `WHERE registrado = 'S'` : '';
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}
+      `SELECT id, ${ALL_KEYS.join(', ')}, ${RESULTADO_DNP_KEYS.join(', ')}
          FROM beneficiarios
          ${where}
         ORDER BY municipio, nombres_apellidos`
     );
     return result.rows;
+  });
+}
+
+// Beneficiarios ya registrados (registrado = 'S'), que es a quienes se les
+// hace la consulta RUI/Sisben (ver scripts/consultar_dnp). `soloPendientes`
+// filtra a quienes aun no tienen resultado guardado (consulta_dnp_en NULL).
+async function listRegistradosParaConsultaDNP({ soloPendientes = false } = {}) {
+  return withConnection(async (client) => {
+    const where = soloPendientes
+      ? `WHERE registrado = 'S' AND consulta_dnp_en IS NULL`
+      : `WHERE registrado = 'S'`;
+    const result = await client.query(
+      `SELECT id, documento_identidad, nombres_apellidos, ${RESULTADO_DNP_KEYS.join(', ')}
+         FROM beneficiarios
+         ${where}
+        ORDER BY nombres_apellidos`
+    );
+    return result.rows;
+  });
+}
+
+// Guarda el resultado de la consulta RUI/Sisben para un documento. No toca
+// ninguna otra columna del beneficiario (ver comentario en la migracion
+// 006_resultado_dnp.sql). Devuelve el registro actualizado (o null si el
+// documento no existe).
+async function actualizarResultadoDNP(documento, { resultadoRui = null, resultadoSisben = null } = {}) {
+  return withConnection(async (client) => {
+    const result = await client.query(
+      `UPDATE beneficiarios
+          SET resultado_rui = $1, resultado_sisben = $2, consulta_dnp_en = now()
+        WHERE documento_identidad = $3
+        RETURNING id`,
+      [resultadoRui, resultadoSisben, documento]
+    );
+    return result.rows[0] || null;
   });
 }
 
@@ -161,7 +198,7 @@ async function listAll({ soloRegistrados = false } = {}) {
 async function listOriginalesImportados() {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}
+      `SELECT id, ${ALL_KEYS.join(', ')}, ${RESULTADO_DNP_KEYS.join(', ')}
          FROM beneficiarios
         WHERE origen_importado = 'S'
         ORDER BY municipio, nombres_apellidos`
@@ -191,6 +228,8 @@ module.exports = {
   search,
   listAll,
   listOriginalesImportados,
+  listRegistradosParaConsultaDNP,
+  actualizarResultadoDNP,
   deleteById,
   PAGE_SIZE
 };

@@ -1,11 +1,22 @@
 const ExcelJS = require('exceljs');
 const { FIELDS } = require('./fields');
-const { dateToInputValue } = require('./viewHelpers');
+const { dateToInputValue, formatDateTime } = require('./viewHelpers');
+
+// Resultado de la consulta RUI/Sisben (ver scripts/consultar_dnp): no son
+// FIELDS porque no se diligencian desde ningun formulario, se agregan aqui
+// como columnas extra al final del export.
+const EXTRA_EXPORT_FIELDS = [
+  { key: 'resultado_rui', label: 'Resultado RUI', type: 'text' },
+  { key: 'resultado_sisben', label: 'Resultado Sisbén', type: 'text' },
+  { key: 'consulta_dnp_en', label: 'Fecha consulta RUI/Sisbén', type: 'datetime' }
+];
+const EXPORT_COLUMNS = [...FIELDS, ...EXTRA_EXPORT_FIELDS];
 
 function cellValue(field, row) {
   const v = row[field.key];
   if (field.type === 'bool') return v === 'S' ? 'X' : '';
   if (field.type === 'date') return dateToInputValue(v);
+  if (field.type === 'datetime') return v ? formatDateTime(v) : '';
   return v === null || v === undefined ? '' : v;
 }
 
@@ -14,7 +25,7 @@ function addBeneficiariosSheet(wb, nombreHoja, titulo, rows) {
     views: [{ state: 'frozen', ySplit: 2 }]
   });
 
-  sheet.mergeCells(1, 1, 1, FIELDS.length + 1);
+  sheet.mergeCells(1, 1, 1, EXPORT_COLUMNS.length + 1);
   const title = sheet.getCell(1, 1);
   title.value = titulo;
   title.font = { bold: true, size: 14 };
@@ -22,7 +33,7 @@ function addBeneficiariosSheet(wb, nombreHoja, titulo, rows) {
 
   const headerRow = sheet.getRow(2);
   headerRow.getCell(1).value = 'N°';
-  FIELDS.forEach((f, i) => {
+  EXPORT_COLUMNS.forEach((f, i) => {
     headerRow.getCell(i + 2).value = f.label;
   });
   headerRow.font = { bold: true };
@@ -32,21 +43,21 @@ function addBeneficiariosSheet(wb, nombreHoja, titulo, rows) {
     cell.alignment = { vertical: 'middle', wrapText: true };
   });
   sheet.getColumn(1).width = 6;
-  FIELDS.forEach((f, i) => {
+  EXPORT_COLUMNS.forEach((f, i) => {
     sheet.getColumn(i + 2).width = f.type === 'bool' ? 10 : 22;
   });
 
   rows.forEach((row, idx) => {
     const r = sheet.getRow(idx + 3);
     r.getCell(1).value = idx + 1;
-    FIELDS.forEach((f, i) => {
+    EXPORT_COLUMNS.forEach((f, i) => {
       r.getCell(i + 2).value = cellValue(f, row);
     });
   });
 
   sheet.autoFilter = {
     from: { row: 2, column: 1 },
-    to: { row: 2, column: FIELDS.length + 1 }
+    to: { row: 2, column: EXPORT_COLUMNS.length + 1 }
   };
 
   return sheet;

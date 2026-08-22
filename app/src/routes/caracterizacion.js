@@ -35,6 +35,9 @@ router.post('/caracterizacion/buscar', (req, res) => {
 });
 
 // Marca la asistencia a la caracterizacion para el documento indicado.
+// Renderiza el resultado directamente (en vez de redirigir a /caracterizacion
+// con el documento en la URL) para que la confirmacion no dependa de que el
+// navegador conserve el query string en la redireccion.
 router.post('/caracterizacion/registrar', async (req, res, next) => {
   try {
     const documento = (req.body.documento || '').trim();
@@ -43,7 +46,12 @@ router.post('/caracterizacion/registrar', async (req, res, next) => {
     const record = await beneficiarios.marcarCaracterizacion(documento);
     if (!record) return res.status(404).render('404');
 
-    res.redirect(`/caracterizacion?documento=${encodeURIComponent(documento)}&marcado=1`);
+    res.render('caracterizacion', {
+      documentoBuscado: documento,
+      record,
+      notFound: false,
+      marcado: true
+    });
   } catch (err) {
     next(err);
   }

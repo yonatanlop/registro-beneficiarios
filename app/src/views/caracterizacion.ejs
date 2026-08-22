@@ -8,9 +8,10 @@
     <form class="busqueda" action="/caracterizacion/buscar" method="post">
       <div class="campo">
         <label for="documento">Documento de identidad</label>
-        <input type="text" id="documento" name="documento" value="<%= documentoBuscado || '' %>" autofocus />
+        <input type="text" id="documento" name="documento" value="<%= documentoBuscado || '' %>" />
       </div>
       <button type="submit">Buscar</button>
+      <% if (documentoBuscado) { %><a class="btn secundario" href="/caracterizacion">Limpiar formulario</a><% } %>
     </form>
   </div>
 

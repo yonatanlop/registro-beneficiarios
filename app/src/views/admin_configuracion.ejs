@@ -40,7 +40,9 @@
         durante las franjas marcadas aquí (hora de Colombia). Fuera de esas
         franjas, cualquiera puede ver el formulario y buscar, pero no
         guardar. Editar a alguien que ya está registrado nunca se bloquea
-        por horario.
+        por horario. Marcar <strong>"Todo el día"</strong> en un día deja el
+        registro abierto las 24 horas de ese día (sin huecos entre
+        franjas), sin importar qué otras franjas estén marcadas.
       </p>
       <div class="tabla-wrap">
         <table class="tabla">
@@ -72,6 +74,23 @@
                 <% }); %>
               </tr>
             <% }); %>
+            <tr>
+              <td><strong>Todo el día</strong></td>
+              <% DIAS.forEach(function(d) { %>
+                <%
+                  const marcadoTodoElDia = config.horariosHabilitados &&
+                    config.horariosHabilitados[d.key] &&
+                    config.horariosHabilitados[d.key].todoElDia;
+                %>
+                <td style="text-align:center">
+                  <input
+                    type="checkbox"
+                    name="horario[<%= d.key %>][todoElDia]"
+                    <%= marcadoTodoElDia ? 'checked' : '' %>
+                  />
+                </td>
+              <% }); %>
+            </tr>
           </tbody>
         </table>
       </div>

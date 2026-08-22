@@ -51,7 +51,10 @@ servidor):
 - 08:30–09:30, 09:30–10:30, 11:30–12:45, 18:30–19:30, 19:30–20:30
 
 Cada casilla habilita o deshabilita esa franja para ese día específico —
-no tienen que ser las mismas franjas todos los días. El botón "Registrar"
+no tienen que ser las mismas franjas todos los días. Hay además una fila
+**"Todo el día"** por día: al marcarla, ese día queda abierto las 24 horas
+(sin los huecos que quedan entre franjas), sin importar qué otras franjas
+estén marcadas para ese mismo día. El botón "Registrar"
 del formulario público (`/preinscripcion`) solo queda habilitado mientras
 la hora actual de Colombia caiga dentro de alguna franja habilitada para
 el día de hoy; el resto del tiempo se ve deshabilitado, con un aviso de

@@ -105,7 +105,7 @@ function parseHorariosBody(body) {
   const marcados = body.horario || {};
   const out = {};
   for (const dia of horarios.DIAS) {
-    out[dia.key] = {};
+    out[dia.key] = { todoElDia: !!(marcados[dia.key] && marcados[dia.key].todoElDia) };
     for (const v of horarios.VENTANAS) {
       out[dia.key][v.id] = !!(marcados[dia.key] && marcados[dia.key][v.id]);
     }

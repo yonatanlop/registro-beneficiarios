@@ -9,6 +9,14 @@ const VENTANAS = [
   { id: 'v5', inicio: '19:30', fin: '20:30' }
 ];
 
+// No es una franja mas del catalogo (no aparece en VENTANAS ni se puede
+// deshabilitar individualmente): es un interruptor aparte por dia,
+// "todoElDia", que cuando esta activo deja el registro abierto las 24
+// horas de ese dia sin importar las franjas de arriba (cubre los huecos
+// entre franjas). Se guarda como una clave mas dentro de cada dia en
+// horarios_habilitados, junto a v1..v5.
+const TODO_EL_DIA = { id: 'todoElDia', inicio: '00:00', fin: '23:59' };
+
 const DIAS = [
   { key: 'lunes', label: 'Lunes' },
   { key: 'martes', label: 'Martes' },
@@ -44,7 +52,7 @@ function diaLabel(key) {
 function defaultHorariosHabilitados() {
   const out = {};
   for (const dia of ORDEN_DIAS) {
-    out[dia] = {};
+    out[dia] = { todoElDia: false };
     for (const v of VENTANAS) out[dia][v.id] = true;
   }
   return out;
@@ -78,6 +86,7 @@ function nowBogota(date = new Date()) {
 function ventanaActivaAhora(horariosHabilitados, date = new Date()) {
   const { dia, minutos } = nowBogota(date);
   const habilitadasHoy = (horariosHabilitados && horariosHabilitados[dia]) || {};
+  if (habilitadasHoy.todoElDia) return TODO_EL_DIA;
   for (const v of VENTANAS) {
     if (!habilitadasHoy[v.id]) continue;
     if (minutos >= parseHora(v.inicio) && minutos < parseHora(v.fin)) {
@@ -102,6 +111,13 @@ function proximaVentana(horariosHabilitados, date = new Date()) {
     const idx = (idxHoy + offset) % 7;
     const diaKey = ORDEN_DIAS[idx];
     const habilitadasEseDia = (horariosHabilitados && horariosHabilitados[diaKey]) || {};
+    if (habilitadasEseDia.todoElDia) {
+      // "Todo el dia" cubre desde las 00:00, asi que salvo que ya estemos
+      // dentro de ese mismo dia (en cuyo caso ya estaria activo y no
+      // llegariamos aqui), siempre es la proxima franja disponible.
+      if (offset === 0) continue;
+      return { dia: diaKey, ventana: TODO_EL_DIA, esHoy: false };
+    }
     for (const v of VENTANAS) {
       if (!habilitadasEseDia[v.id]) continue;
       const inicio = parseHora(v.inicio);
@@ -114,6 +130,7 @@ function proximaVentana(horariosHabilitados, date = new Date()) {
 
 module.exports = {
   VENTANAS,
+  TODO_EL_DIA,
   DIAS,
   ventanaLabel,
   diaLabel,

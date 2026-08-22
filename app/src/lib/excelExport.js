@@ -6,6 +6,7 @@ const { dateToInputValue, formatDateTime } = require('./viewHelpers');
 // FIELDS porque no se diligencian desde ningun formulario, se agregan aqui
 // como columnas extra al final del export.
 const EXTRA_EXPORT_FIELDS = [
+  { key: 'caracterizacion', label: 'Caracterización', type: 'boolSiNo' },
   { key: 'resultado_rui', label: 'Resultado RUI', type: 'text' },
   { key: 'resultado_sisben', label: 'Resultado Sisbén', type: 'text' },
   { key: 'consulta_dnp_en', label: 'Fecha consulta RUI/Sisbén', type: 'datetime' }
@@ -15,6 +16,7 @@ const EXPORT_COLUMNS = [...FIELDS, ...EXTRA_EXPORT_FIELDS];
 function cellValue(field, row) {
   const v = row[field.key];
   if (field.type === 'bool') return v === 'S' ? 'X' : '';
+  if (field.type === 'boolSiNo') return v === 'S' ? 'Sí' : 'No';
   if (field.type === 'date') return dateToInputValue(v);
   if (field.type === 'datetime') return v ? formatDateTime(v) : '';
   return v === null || v === undefined ? '' : v;
@@ -44,7 +46,7 @@ function addBeneficiariosSheet(wb, nombreHoja, titulo, rows) {
   });
   sheet.getColumn(1).width = 6;
   EXPORT_COLUMNS.forEach((f, i) => {
-    sheet.getColumn(i + 2).width = f.type === 'bool' ? 10 : 22;
+    sheet.getColumn(i + 2).width = f.type === 'bool' || f.type === 'boolSiNo' ? 10 : 22;
   });
 
   rows.forEach((row, idx) => {

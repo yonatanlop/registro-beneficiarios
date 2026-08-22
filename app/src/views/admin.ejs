@@ -53,6 +53,7 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
             <th>Registrado</th>
             <th>Fecha y hora de registro</th>
             <th>Externo</th>
+            <th>Caracterización</th>
             <th>RUI</th>
             <th>Sisbén</th>
             <th></th>
@@ -70,6 +71,7 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
               <td><%= r.registrado === 'S' ? 'Sí' : 'No' %></td>
               <td><%= formatDateTime(r.registrado_en) || '—' %></td>
               <td><%= r.es_externo === 'S' ? 'Sí' : 'No' %></td>
+              <td><%= r.caracterizacion === 'S' ? 'Sí' : 'No' %></td>
               <td<% if (r.consulta_dnp_en) { %> title="Consultado: <%= formatDateTime(r.consulta_dnp_en) %>"<% } %>><%= r.resultado_rui || '—' %></td>
               <td<% if (r.consulta_dnp_en) { %> title="Consultado: <%= formatDateTime(r.consulta_dnp_en) %>"<% } %>><%= r.resultado_sisben || '—' %></td>
               <td class="btn-fila">
@@ -82,7 +84,7 @@ const cupoLleno = cupo.registrados >= config.maxRegistros;
             </tr>
           <% }); %>
           <% if (rows.length === 0) { %>
-            <tr><td colspan="12">No hay resultados.</td></tr>
+            <tr><td colspan="13">No hay resultados.</td></tr>
           <% } %>
         </tbody>
       </table>

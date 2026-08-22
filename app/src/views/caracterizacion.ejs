@@ -1,0 +1,55 @@
+<%- include('partials/head', { titulo: 'Caracterización - Registro de Beneficiarios' }) %>
+<%- include('partials/nav') %>
+
+<main>
+  <div class="card">
+    <h1>Buscar beneficiario</h1>
+    <p>Ingresa el número de documento para registrar la asistencia a la caracterización.</p>
+    <form class="busqueda" action="/caracterizacion/buscar" method="post">
+      <div class="campo">
+        <label for="documento">Documento de identidad</label>
+        <input type="text" id="documento" name="documento" value="<%= documentoBuscado || '' %>" autofocus />
+      </div>
+      <button type="submit">Buscar</button>
+    </form>
+  </div>
+
+  <% if (notFound) { %>
+    <div class="alerta info">No se encontró ningún beneficiario con el documento "<%= documentoBuscado %>".</div>
+  <% } %>
+
+  <% if (marcado) { %>
+    <div class="alerta exito">Asistencia a la caracterización registrada correctamente.</div>
+  <% } %>
+
+  <% if (record) { %>
+    <div class="card">
+      <h1>Resultado</h1>
+      <div class="grid">
+        <div class="campo">
+          <label>Nombres y apellidos completos</label>
+          <input type="text" value="<%= record.nombres_apellidos %>" readonly />
+        </div>
+        <div class="campo">
+          <label>Documento de identidad</label>
+          <input type="text" value="<%= record.documento_identidad %>" readonly />
+        </div>
+      </div>
+
+      <div class="acciones" style="margin-top:16px">
+        <% if (record.caracterizacion === 'S') { %>
+          <div class="alerta info" style="margin:0">Ya se registró la asistencia a la caracterización de esta persona.</div>
+        <% } else { %>
+          <form action="/caracterizacion/registrar" method="post">
+            <input type="hidden" name="documento" value="<%= record.documento_identidad %>" />
+            <button type="submit">Registrar asistencia a la caracterización</button>
+          </form>
+        <% } %>
+      </div>
+    </div>
+  <% } %>
+</main>
+
+<footer class="pie">Registro de Beneficiarios · Jornadas de Apoyo</footer>
+</body>
+</html>

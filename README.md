@@ -263,6 +263,21 @@ nombre y documento antes de proceder. Es una acción irreversible: no hay
 "papelera" ni forma de deshacerla después. El cupo de registros y las
 estadísticas del panel se actualizan solos al eliminar.
 
+## Caracterización
+
+`/caracterizacion` es una página pública (sin iniciar sesión), pensada para
+un punto de atención aparte: se busca a la persona solo por documento de
+identidad y, si existe, se muestra su nombre completo y documento con un
+botón **"Registrar asistencia a la caracterización"**. Es una acción de una
+sola vía — una vez registrada no hay botón para desmarcarla — y es
+independiente de "registrado" (el flujo de /preinscripcion): no depende de
+que la persona ya se haya preinscrito.
+
+El resultado se guarda en `beneficiarios.caracterizacion` ('S'/'N'), visible
+en el panel admin y en el export a Excel como **Sí/No**, y — igual que
+`resultado_rui`/`resultado_sisben` — es una columna que no participa en
+ningún formulario, así que guardar o editar un beneficiario nunca la borra.
+
 ## Consulta RUI / Sisbén (verificación de vulnerabilidad)
 
 El panel admin (tabla y export a Excel) muestra dos columnas de solo

@@ -23,12 +23,18 @@ function normalizeInput(body) {
 }
 
 const RESULTADO_DNP_KEYS = ['resultado_rui', 'resultado_sisben', 'consulta_dnp_en'];
+// Columnas que existen en la tabla pero no son FIELDS: no se diligencian
+// desde ningun formulario (publico ni de edicion), asi que quedan por
+// fuera de ALL_KEYS/upsert para que guardar un beneficiario nunca las
+// pise. Se leen aqui para mostrarlas, y se escriben con sus propias
+// funciones dedicadas (ver actualizarResultadoDNP y marcarCaracterizacion).
+const EXTRA_KEYS = [...RESULTADO_DNP_KEYS, 'caracterizacion'];
 
 async function findByDocumento(documento) {
   if (!documento) return null;
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, ${RESULTADO_DNP_KEYS.join(', ')}, creado_en, actualizado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, ${EXTRA_KEYS.join(', ')}, creado_en, actualizado_en
          FROM beneficiarios
         WHERE documento_identidad = $1`,
       [documento.trim()]
@@ -40,7 +46,7 @@ async function findByDocumento(documento) {
 async function findById(id) {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, ${RESULTADO_DNP_KEYS.join(', ')}, creado_en, actualizado_en
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, origen_importado, ${EXTRA_KEYS.join(', ')}, creado_en, actualizado_en
          FROM beneficiarios
         WHERE id = $1`,
       [id]
@@ -124,7 +130,7 @@ async function search({ q, page = 1 } = {}) {
     const limitIdx = binds.length + 1;
     const offsetIdx = binds.length + 2;
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, ${RESULTADO_DNP_KEYS.join(', ')}
+      `SELECT id, ${ALL_KEYS.join(', ')}, registrado_en, ${EXTRA_KEYS.join(', ')}
          FROM beneficiarios
          ${where}
         ORDER BY nombres_apellidos
@@ -146,7 +152,7 @@ async function listAll({ soloRegistrados = false } = {}) {
   return withConnection(async (client) => {
     const where = soloRegistrados ? `WHERE registrado = 'S'` : '';
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, ${RESULTADO_DNP_KEYS.join(', ')}
+      `SELECT id, ${ALL_KEYS.join(', ')}, ${EXTRA_KEYS.join(', ')}
          FROM beneficiarios
          ${where}
         ORDER BY municipio, nombres_apellidos`
@@ -190,6 +196,23 @@ async function actualizarResultadoDNP(documento, { resultadoRui = null, resultad
   });
 }
 
+// Marca la asistencia a la caracterizacion (pagina publica /caracterizacion).
+// Es una accion de una sola via: una vez marcada 'S' no hay boton para
+// desmarcarla (si hay que corregir un error, se hace directo en la base
+// de datos). Devuelve el registro (o null si el documento no existe).
+async function marcarCaracterizacion(documento) {
+  return withConnection(async (client) => {
+    const result = await client.query(
+      `UPDATE beneficiarios
+          SET caracterizacion = 'S'
+        WHERE documento_identidad = $1
+        RETURNING id, nombres_apellidos, documento_identidad, caracterizacion`,
+      [documento]
+    );
+    return result.rows[0] || null;
+  });
+}
+
 // Solo las personas que vinieron de la carga masiva original (Excel/PDF),
 // sin importar si ya se registraron o no. Se usa para el reporte
 // "registrados vs. pendientes" del panel admin, que compara
@@ -198,7 +221,7 @@ async function actualizarResultadoDNP(documento, { resultadoRui = null, resultad
 async function listOriginalesImportados() {
   return withConnection(async (client) => {
     const result = await client.query(
-      `SELECT id, ${ALL_KEYS.join(', ')}, ${RESULTADO_DNP_KEYS.join(', ')}
+      `SELECT id, ${ALL_KEYS.join(', ')}, ${EXTRA_KEYS.join(', ')}
          FROM beneficiarios
         WHERE origen_importado = 'S'
         ORDER BY municipio, nombres_apellidos`
@@ -230,6 +253,7 @@ module.exports = {
   listOriginalesImportados,
   listRegistradosParaConsultaDNP,
   actualizarResultadoDNP,
+  marcarCaracterizacion,
   deleteById,
   PAGE_SIZE
 };

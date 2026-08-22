@@ -8,6 +8,7 @@ const { seedAdminIfEmpty } = require('./lib/usuarios');
 const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const caracterizacionRoutes = require('./routes/caracterizacion');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use((req, res, next) => {
 
 app.use('/', publicRoutes);
 app.use('/', authRoutes);
+app.use('/', caracterizacionRoutes);
 app.use('/admin', adminRoutes);
 
 app.use((req, res) => {
